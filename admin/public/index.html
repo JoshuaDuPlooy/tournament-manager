@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Tournament Control Panel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="admin-header">
+    <h1>Tournament Control Panel</h1>
+    <p class="hint">Edits here write directly to <code>site/data/*.json</code>. Refresh the public site to see changes.</p>
+    <nav class="tabs">
+      <button class="tab-btn active" data-tab="tournament">Tournament Info</button>
+      <button class="tab-btn" data-tab="entries">Entries</button>
+    </nav>
+  </header>
+
+  <main>
+    <section id="tab-tournament" class="tab-panel active">
+      <h2>Tournament Info</h2>
+      <form id="tournament-form" class="form-grid">
+        <label>Name <input name="name" required /></label>
+        <label>Season <input name="season" /></label>
+        <label>Events (comma-separated) <input name="events" required /></label>
+        <label>Start Date <input name="startDate" type="date" /></label>
+        <label>End Date <input name="endDate" type="date" /></label>
+        <label>Venue <input name="venue" /></label>
+        <label>Entry Fee (R per event) <input name="entryFee" type="number" min="0" step="0.01" /></label>
+        <button type="submit">Save</button>
+      </form>
+      <p id="tournament-status" class="status-msg"></p>
+    </section>
+
+    <section id="tab-entries" class="tab-panel">
+      <div class="tab-header-row">
+        <h2>Entries</h2>
+        <label class="visibility-toggle">
+          <input type="checkbox" id="entries-visible-toggle" />
+          <span class="toggle-switch"></span>
+          <span class="toggle-label">Visible on public site</span>
+        </label>
+      </div>
+      <div class="import-bar">
+        <a href="/api/entries/template">Download template (.xlsx)</a>
+        <input type="file" id="import-file" accept=".xlsx" />
+        <button type="button" id="import-btn" class="secondary">Import</button>
+        <span id="import-status" class="status-msg"></span>
+      </div>
+      <div class="filter-bar">
+        <label>Name <input type="text" id="filter-name" placeholder="Search name" /></label>
+        <label>Club <input type="text" id="filter-club" placeholder="Search club" /></label>
+        <label>Paid
+          <select id="filter-paid">
+            <option value="all">All</option>
+            <option value="paid">Paid</option>
+            <option value="unpaid">Unpaid</option>
+          </select>
+        </label>
+      </div>
+      <nav class="tabs subtabs">
+        <button class="subtab-btn active" data-subtab="overall">Overall</button>
+        <button class="subtab-btn" data-subtab="by-event">Individual Events</button>
+      </nav>
+
+      <div id="subtab-overall" class="subtab-panel active">
+        <table id="entries-table-overall">
+          <thead>
+            <tr><th>Name</th><th>Club</th><th>Events</th><th>Paid</th><th></th></tr>
+          </thead>
+          <tbody></tbody>
+          <tfoot>
+            <tr class="totals-row">
+              <td></td>
+              <td></td>
+              <td id="entries-overall-count"></td>
+              <td id="entries-overall-money"></td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <div id="subtab-by-event" class="subtab-panel">
+        <label class="event-filter-label">Event
+          <select id="event-filter"></select>
+        </label>
+        <table id="entries-table-by-event">
+          <thead>
+            <tr><th>Name</th><th>Club</th><th>Events</th><th>Paid</th><th></th></tr>
+          </thead>
+          <tbody></tbody>
+          <tfoot>
+            <tr class="totals-row">
+              <td></td>
+              <td></td>
+              <td id="entries-by-event-count"></td>
+              <td id="entries-by-event-money"></td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <h3 id="entry-form-title">Add Entry</h3>
+      <form id="entry-form" class="form-grid">
+        <input type="hidden" name="id" />
+        <label>Name <input name="name" required /></label>
+        <label>Club <input name="club" /></label>
+        <div class="form-full">
+          <span class="field-label">Events</span>
+          <div id="entry-events-checkboxes" class="checkbox-group"></div>
+        </div>
+        <label class="checkbox-inline"><input type="checkbox" name="paid" /> Paid</label>
+        <div class="form-actions">
+          <button type="submit">Save Entry</button>
+          <button type="button" id="entry-cancel" class="secondary" hidden>Cancel</button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

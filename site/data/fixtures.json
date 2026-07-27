@@ -1,0 +1,15 @@
+[
+  {
+    "id": "fx-1",
+    "division": "U12",
+    "round": "Group Stage",
+    "date": "2026-08-01",
+    "time": "09:00",
+    "venue": "Field 1",
+    "homeTeamId": "team-1",
+    "awayTeamId": "team-2",
+    "homeScore": null,
+    "awayScore": null,
+    "status": "scheduled"
+  }
+]

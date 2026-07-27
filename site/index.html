@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Tournament</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <h1 id="tournament-name">Loading…</h1>
+    <div class="subtitle" id="tournament-subtitle"></div>
+    <nav class="site-nav">
+      <a href="index.html" class="active">Overview</a>
+      <a href="entries.html" id="nav-entries">Entries</a>
+    </nav>
+  </header>
+  <main>
+    <h2>Details</h2>
+    <table>
+      <tbody id="details-body"></tbody>
+    </table>
+
+    <h2>Events</h2>
+    <table>
+      <thead><tr><th>Event</th><th>Entries</th></tr></thead>
+      <tbody id="events-body"></tbody>
+    </table>
+  </main>
+
+  <script src="js/data.js"></script>
+  <script>
+    loadEntriesData().then(({ tournament, entries }) => {
+      document.getElementById("tournament-name").textContent = tournament.name;
+      document.getElementById("tournament-subtitle").textContent =
+        `${tournament.startDate} — ${tournament.endDate} · ${tournament.venue}`;
+
+      const detailsBody = document.getElementById("details-body");
+      detailsBody.innerHTML = `
+        <tr><td>Season</td><td>${tournament.season}</td></tr>
+        <tr><td>Venue</td><td>${tournament.venue}</td></tr>
+        <tr><td>Dates</td><td>${tournament.startDate} to ${tournament.endDate}</td></tr>
+      `;
+
+      const eventsBody = document.getElementById("events-body");
+      eventsBody.innerHTML = tournament.events
+        .map((ev) => {
+          const count =
+            tournament.entriesVisible === false
+              ? "—"
+              : entries.filter((e) => (e.events || []).includes(ev)).length;
+          return `<tr><td>${ev}</td><td>${count}</td></tr>`;
+        })
+        .join("");
+    });
+  </script>
+</body>
+</html>

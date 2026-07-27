@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Entries</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <h1 id="tournament-name">Loading…</h1>
+    <div class="subtitle" id="tournament-subtitle"></div>
+    <nav class="site-nav">
+      <a href="index.html">Overview</a>
+      <a href="entries.html" class="active">Entries</a>
+    </nav>
+  </header>
+  <main>
+    <h2>Entries</h2>
+
+    <div id="entries-content">
+      <div class="filter-bar">
+        <label>Name <input type="text" id="filter-name" placeholder="Search name" /></label>
+        <label>Club <input type="text" id="filter-club" placeholder="Search club" /></label>
+      </div>
+      <nav class="subtabs">
+        <button class="subtab-btn active" data-subtab="overall">Overall</button>
+        <button class="subtab-btn" data-subtab="by-event">Individual Events</button>
+      </nav>
+
+      <div id="subtab-overall" class="subtab-panel active">
+        <table id="entries-table-overall">
+          <thead>
+            <tr><th>Name</th><th>Club</th><th>Events</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <p class="empty" id="overall-empty" hidden>No entries yet.</p>
+      </div>
+
+      <div id="subtab-by-event" class="subtab-panel">
+        <label class="event-filter-label">Event
+          <select id="event-filter"></select>
+        </label>
+        <table id="entries-table-by-event">
+          <thead>
+            <tr><th>Name</th><th>Club</th><th>Events</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <p class="empty" id="by-event-empty" hidden>No entries for this event yet.</p>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/data.js"></script>
+  <script>
+    document.querySelectorAll(".subtab-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".subtab-btn").forEach((b) => b.classList.remove("active"));
+        document.querySelectorAll(".subtab-panel").forEach((p) => p.classList.remove("active"));
+        btn.classList.add("active");
+        document.getElementById(`subtab-${btn.dataset.subtab}`).classList.add("active");
+      });
+    });
+
+    function sortByClubThenName(entries) {
+      return [...entries].sort((a, b) => {
+        const clubCompare = (a.club || "").localeCompare(b.club || "");
+        if (clubCompare !== 0) return clubCompare;
+        return (a.name || "").localeCompare(b.name || "");
+      });
+    }
+
+    function entryRowHTML(entry) {
+      return `
+        <tr>
+          <td>${entry.name}</td>
+          <td>${entry.club || "—"}</td>
+          <td>${(entry.events || []).join(", ") || "—"}</td>
+        </tr>
+      `;
+    }
+
+    const filterNameInput = document.getElementById("filter-name");
+    const filterClubInput = document.getElementById("filter-club");
+
+    function applyFilters(entries) {
+      const name = filterNameInput.value.trim().toLowerCase();
+      const club = filterClubInput.value.trim().toLowerCase();
+      return entries.filter((entry) => {
+        if (name && !(entry.name || "").toLowerCase().includes(name)) return false;
+        if (club && !(entry.club || "").toLowerCase().includes(club)) return false;
+        return true;
+      });
+    }
+
+    loadEntriesData().then(({ tournament, entries }) => {
+      document.getElementById("tournament-name").textContent = tournament.name;
+      document.getElementById("tournament-subtitle").textContent =
+        `${tournament.startDate} — ${tournament.endDate} · ${tournament.venue}`;
+
+      const visibleEntries = tournament.entriesVisible === false ? [] : entries;
+
+      if (tournament.entriesVisible === false) {
+        document.getElementById("overall-empty").textContent = "Not yet Available";
+        document.getElementById("by-event-empty").textContent = "Not yet Available";
+      }
+
+      const eventFilter = document.getElementById("event-filter");
+      const events = tournament.events || [];
+      eventFilter.innerHTML = events.map((ev) => `<option value="${ev}">${ev}</option>`).join("");
+
+      function renderOverall() {
+        const filtered = applyFilters(visibleEntries);
+        const overallBody = document.querySelector("#entries-table-overall tbody");
+        overallBody.innerHTML = sortByClubThenName(filtered).map(entryRowHTML).join("");
+        document.getElementById("entries-table-overall").hidden = filtered.length === 0;
+        document.getElementById("overall-empty").hidden = filtered.length > 0;
+      }
+
+      function renderByEvent() {
+        const selected = eventFilter.value;
+        const filtered = applyFilters(visibleEntries).filter((e) => (e.events || []).includes(selected));
+        const byEventBody = document.querySelector("#entries-table-by-event tbody");
+        byEventBody.innerHTML = sortByClubThenName(filtered).map(entryRowHTML).join("");
+        document.getElementById("entries-table-by-event").hidden = filtered.length === 0;
+        document.getElementById("by-event-empty").hidden = filtered.length > 0;
+      }
+
+      function renderAll() {
+        renderOverall();
+        renderByEvent();
+      }
+
+      eventFilter.addEventListener("change", renderByEvent);
+      filterNameInput.addEventListener("input", renderAll);
+      filterClubInput.addEventListener("input", renderAll);
+      renderAll();
+    });
+  </script>
+</body>
+</html>

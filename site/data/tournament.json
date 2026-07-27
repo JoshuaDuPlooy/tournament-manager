@@ -1,0 +1,22 @@
+{
+  "name": "Ravens 2026 Terrence Orr Championship",
+  "season": "2026",
+  "events": [
+    "u11 Girls",
+    "u11 Boys",
+    "u13 Girls",
+    "u13 Boys",
+    "u15 Girls",
+    "u15 Boys",
+    "u19 Girls",
+    "u19 Boys"
+  ],
+  "startDate": "2026-08-01",
+  "endDate": "2026-08-01",
+  "venue": "Ravens Multipurpose Centre",
+  "entryFee": 60,
+  "entriesVisible": true,
+  "pointsWin": 3,
+  "pointsDraw": 1,
+  "pointsLoss": 0
+}
