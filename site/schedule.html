@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Schedule</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <nav class="top-nav">
+    <div class="nav-links" id="navLinks">
+      <a href="index.html">Overview</a>
+      <a href="entries.html">Entries</a>
+      <a href="groups.html">Groups</a>
+      <a href="knockouts.html">Knockouts</a>
+      <a href="schedule.html" class="active">Schedule</a>
+    </div>
+    <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <div class="page-header">
+    <img src="logo.png" alt="Ravens Logo" />
+    <div class="page-header-text">
+      <h1 id="tournament-name">Loading…</h1>
+      <p id="tournament-subtitle"></p>
+    </div>
+  </div>
+
+  <main>
+    <div class="legend" id="schedule-legend"></div>
+    <div class="table-scroll">
+      <table class="schedule-table" id="schedule-table"></table>
+    </div>
+    <p class="empty" id="schedule-empty" hidden>No schedule published yet.</p>
+  </main>
+
+  <script src="js/data.js"></script>
+  <script>
+    function toggleMenu() {
+      document.getElementById("navLinks").classList.toggle("open");
+      document.getElementById("hamburger").classList.toggle("open");
+    }
+
+    const EVENT_COLORS = ["#FFD6D6", "#FFE8C2", "#FFF6BF", "#DFFFD6", "#C2F0E8", "#C2E0FF", "#D9C2FF", "#FFC2E8"];
+
+    loadScheduleData().then(({ tournament, schedule }) => {
+      document.getElementById("tournament-name").textContent = tournament.name;
+      document.getElementById("tournament-subtitle").textContent =
+        `${tournament.startDate} — ${tournament.endDate} · ${tournament.venue}`;
+
+      const events = tournament.events || [];
+
+      function eventColor(event) {
+        const idx = events.indexOf(event);
+        return EVENT_COLORS[(idx >= 0 ? idx : 0) % EVENT_COLORS.length];
+      }
+
+      function matchEventForText(text) {
+        const lower = text.toLowerCase();
+        return events.find((ev) => lower.startsWith(ev.toLowerCase())) || null;
+      }
+
+      // Groups render as "Event / Group N" (2 lines); knockout matches as "Event / Round / Match N" (3 lines).
+      function formatScheduleCell(text, event) {
+        if (!event) return text;
+        const rest = text.slice(event.length).trim().replace(/\s+/g, " ");
+        if (/^Group\s+\d+$/i.test(rest)) {
+          return `${event}<br>${rest}`;
+        }
+        const matchSplit = rest.match(/^(.*?)\s+(Match\s+\d+)$/i);
+        if (matchSplit) {
+          return `${event}<br>${matchSplit[1].trim()}<br>${matchSplit[2].trim()}`;
+        }
+        return `${event}<br>${rest}`;
+      }
+
+      const legend = document.getElementById("schedule-legend");
+      legend.innerHTML = events
+        .map((ev) => `<span class="legend-item" style="--swatch-color:${eventColor(ev)};">${ev}</span>`)
+        .join("");
+
+      const table = document.getElementById("schedule-table");
+      const emptyMsg = document.getElementById("schedule-empty");
+
+      if (tournament.scheduleVisible === false) {
+        table.hidden = true;
+        emptyMsg.hidden = false;
+        emptyMsg.textContent = "Not yet Available";
+      } else if (!schedule.rows || schedule.rows.length === 0) {
+        table.hidden = true;
+        emptyMsg.hidden = false;
+        emptyMsg.textContent = "No schedule published yet.";
+      } else {
+        table.hidden = false;
+        emptyMsg.hidden = true;
+
+        const thead = `
+          <thead>
+            <tr>
+              <th>Time</th>
+              ${schedule.tables.map((t) => `<th>${t}</th>`).join("")}
+            </tr>
+          </thead>
+        `;
+
+        const tbody = `
+          <tbody>
+            ${schedule.rows
+              .map(
+                (row) => `
+                  <tr>
+                    <td class="time-col">${row.time}</td>
+                    ${schedule.tables
+                      .map((t) => {
+                        const text = row.cells[t];
+                        if (!text) return `<td></td>`;
+                        const ev = matchEventForText(text);
+                        const color = ev ? eventColor(ev) : "#eee";
+                        return `<td style="background:${color};">${formatScheduleCell(text, ev)}</td>`;
+                      })
+                      .join("")}
+                  </tr>
+                `
+              )
+              .join("")}
+          </tbody>
+        `;
+
+        table.innerHTML = thead + tbody;
+      }
+    });
+  </script>
+</body>
+</html>

@@ -77,7 +77,7 @@
       "u13 Boys",
       "u15 Boys"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "8dd58456-0c0e-4883-a1d7-fbe4ac07d13f",
@@ -96,7 +96,7 @@
       "u15 Boys",
       "u19 Boys"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "23c571de-9a32-4bc2-8a06-69a818bd5f06",
@@ -105,7 +105,7 @@
     "events": [
       "u11 Boys"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "7b3355fc-6a87-4250-8683-4fc28bfd5f00",
@@ -132,7 +132,7 @@
     "events": [
       "u13 Boys"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "30dce013-ce40-4fa6-8b04-452e82154bc5",
@@ -160,7 +160,7 @@
       "u13 Boys",
       "u15 Boys"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "331ac3cd-958b-452f-b532-ca5c79696dcb",
@@ -245,7 +245,7 @@
     "events": [
       "u11 Boys"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "2bd0b28d-3e2e-4437-aa50-67462479a496",
@@ -254,7 +254,7 @@
     "events": [
       "u13 Boys"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "bd409c63-8ad3-421b-accb-db393b3e2b06",
@@ -263,7 +263,7 @@
     "events": [
       "u13 Girls"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "b0c68034-c177-4a71-b2ce-40cd12a88c87",
@@ -272,7 +272,7 @@
     "events": [
       "u13 Boys"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "40e5d2da-fbda-4270-883f-d8307646770b",
@@ -281,7 +281,7 @@
     "events": [
       "u13 Boys"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "e96d7f32-9ecb-4515-b9c6-8c03897b3ca9",
@@ -290,7 +290,7 @@
     "events": [
       "u13 Boys"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "60556a2a-4ad3-48bf-9feb-765176cfd6f6",
@@ -299,7 +299,7 @@
     "events": [
       "u13 Boys"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "6be685a9-485a-45f0-946c-cd1e1ab7a3b3",
@@ -308,16 +308,16 @@
     "events": [
       "u15 Girls"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "d5db2cf2-c5b7-4384-b893-fb54f7a3c2e3",
     "name": "Rogan Fortuin",
     "club": "Ravens",
     "events": [
-      "u15 Girls"
+      "u15 Boys"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "0ea3cc79-11a8-4629-9834-f881440637d3",
@@ -326,7 +326,7 @@
     "events": [
       "u15 Girls"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "ed6c329c-6dcc-4dcb-bec1-7c73b4e8d347",
@@ -335,7 +335,7 @@
     "events": [
       "u19 Boys"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "667243d1-a93e-4067-8306-8cc086c280a3",
@@ -344,7 +344,7 @@
     "events": [
       "u19 Boys"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "1ff70d21-3c9c-4b53-9a29-34f5f593f672",
@@ -353,7 +353,7 @@
     "events": [
       "u19 Boys"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "0b74016e-b62b-42ef-b1f8-c9a701196ad3",
@@ -362,7 +362,7 @@
     "events": [
       "u19 Boys"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "e4c131a4-ce3a-4b8c-aa16-4f465e9f4e54",
@@ -371,11 +371,11 @@
     "events": [
       "u19 Boys"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "04702886-2047-46ea-bf3b-b447218522de",
-    "name": "DOMINGO Farah",
+    "name": "Farah Domingo",
     "club": "Duinefontein TTC",
     "events": [
       "u11 Girls",
@@ -385,7 +385,7 @@
   },
   {
     "id": "003d4af2-1a5f-46e6-9095-84aa889bd558",
-    "name": "DOMINGO Imaan",
+    "name": "Imaan Domingo",
     "club": "Duinefontein TTC",
     "events": [
       "u11 Girls",
@@ -395,7 +395,7 @@
   },
   {
     "id": "50e47134-e8ed-4e31-8864-a99f9987b595",
-    "name": "DOMINGO Yaqoob",
+    "name": "Yaqoob Domingo",
     "club": "Duinefontein TTC",
     "events": [
       "u11 Boys",
@@ -405,7 +405,7 @@
   },
   {
     "id": "af096482-a719-47da-bb41-1020f173a15a",
-    "name": "SASMAN Abubakr",
+    "name": "Abubakr Sasman",
     "club": "Duinefontein TTC",
     "events": [
       "u13 Boys",
@@ -415,7 +415,7 @@
   },
   {
     "id": "103a3856-1a87-4f8c-bb75-72e51024a80d",
-    "name": "SONDAY Ganaan",
+    "name": "Ganaan Sonday",
     "club": "Duinefontein TTC",
     "events": [
       "u15 Girls",
@@ -425,7 +425,7 @@
   },
   {
     "id": "d09c088d-7a23-4457-8f9e-6b5d5eeb7809",
-    "name": "DOMINGO Adam",
+    "name": "Adam Domingo",
     "club": "Duinefontein TTC",
     "events": [
       "u15 Boys",
@@ -435,7 +435,7 @@
   },
   {
     "id": "59193ae7-ad27-4bde-bdcb-45abf1257817",
-    "name": "HARRIS Tazmin",
+    "name": "Tazmin Harris",
     "club": "Duinefontein TTC",
     "events": [
       "u19 Girls"
@@ -444,7 +444,7 @@
   },
   {
     "id": "8708ad83-28fd-4ba8-a6f6-eb7257d4c82e",
-    "name": "LAWRENCE Caleb",
+    "name": "Caleb Lawrence",
     "club": "Duinefontein TTC",
     "events": [
       "u19 Boys"
@@ -453,7 +453,7 @@
   },
   {
     "id": "8b97dd6f-38fd-4d32-a825-397bae557a0f",
-    "name": "LINGEVELDT Matthew",
+    "name": "Matthew Lingeveldt",
     "club": "Duinefontein TTC",
     "events": [
       "u19 Boys"
@@ -462,11 +462,57 @@
   },
   {
     "id": "b331f258-58ba-4a35-9ffc-89f1c2cf4723",
-    "name": "BROWN Wayden",
+    "name": "Wayden Brown",
     "club": "Duinefontein TTC",
     "events": [
       "u15 Boys",
       "u19 Boys"
+    ],
+    "paid": false
+  },
+  {
+    "id": "a6a62f31-203d-4885-899d-ec3b47bbedfc",
+    "name": "Mikael Dodgen",
+    "club": "GWTTC",
+    "events": [
+      "u19 Boys"
+    ],
+    "paid": true
+  },
+  {
+    "id": "3af063d6-d487-4b03-a601-ea78fb8d24ca",
+    "name": "Aiden Herwill",
+    "club": "GWTTC",
+    "events": [
+      "u19 Boys"
+    ],
+    "paid": true
+  },
+  {
+    "id": "12084f28-a9d0-4ad3-b3dc-04587638f99a",
+    "name": "Jessne Hendricks",
+    "club": "GWTTC",
+    "events": [
+      "u19 Girls"
+    ],
+    "paid": true
+  },
+  {
+    "id": "19233997-077a-4b70-a86b-652e74570a1a",
+    "name": "Rachel Lopes",
+    "club": "GWTTC",
+    "events": [
+      "u15 Girls"
+    ],
+    "paid": true
+  },
+  {
+    "id": "cfd66a7a-37e4-4985-9401-f27f94d9cc75",
+    "name": "Timothy Lingevelt",
+    "club": "Duinefontein TTC",
+    "events": [
+      "u13 Boys",
+      "u15 Boys"
     ],
     "paid": false
   }

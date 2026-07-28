@@ -7,14 +7,33 @@
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-  <header class="site-header">
-    <h1 id="tournament-name">Loading…</h1>
-    <div class="subtitle" id="tournament-subtitle"></div>
-    <nav class="site-nav">
+  <nav class="top-nav">
+    <div class="nav-links" id="navLinks">
       <a href="index.html">Overview</a>
-      <a href="entries.html" class="active">Entries</a>
-    </nav>
-  </header>
+      <a href="entries.html" id="nav-entries" class="active">Entries</a>
+      <a href="groups.html">Groups</a>
+      <a href="knockouts.html">Knockouts</a>
+      <a href="schedule.html">Schedule</a>
+    </div>
+    <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <div class="page-header">
+    <img src="logo.png" alt="Ravens Logo" />
+    <div class="page-header-text">
+      <h1 id="tournament-name">Loading…</h1>
+      <p id="tournament-subtitle"></p>
+    </div>
+  </div>
+
+  <nav class="entry-tabs-wrapper">
+    <div class="entry-tabs" id="entry-tabs">
+      <button class="entry-tab-btn active" data-tab="overall">Overall</button>
+    </div>
+  </nav>
+
   <main>
     <h2>Entries</h2>
 
@@ -23,12 +42,8 @@
         <label>Name <input type="text" id="filter-name" placeholder="Search name" /></label>
         <label>Club <input type="text" id="filter-club" placeholder="Search club" /></label>
       </div>
-      <nav class="subtabs">
-        <button class="subtab-btn active" data-subtab="overall">Overall</button>
-        <button class="subtab-btn" data-subtab="by-event">Individual Events</button>
-      </nav>
 
-      <div id="subtab-overall" class="subtab-panel active">
+      <div id="panel-overall" class="entry-panel active">
         <table id="entries-table-overall">
           <thead>
             <tr><th>Name</th><th>Club</th><th>Events</th></tr>
@@ -38,16 +53,8 @@
         <p class="empty" id="overall-empty" hidden>No entries yet.</p>
       </div>
 
-      <div id="subtab-by-event" class="subtab-panel">
-        <label class="event-filter-label">Event
-          <select id="event-filter"></select>
-        </label>
-        <table id="entries-table-by-event">
-          <thead>
-            <tr><th>Name</th><th>Club</th><th>Events</th></tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+      <div id="panel-by-event" class="entry-panel">
+        <div class="clubs-grid" id="by-event-grid"></div>
         <p class="empty" id="by-event-empty" hidden>No entries for this event yet.</p>
       </div>
     </div>
@@ -55,14 +62,10 @@
 
   <script src="js/data.js"></script>
   <script>
-    document.querySelectorAll(".subtab-btn").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        document.querySelectorAll(".subtab-btn").forEach((b) => b.classList.remove("active"));
-        document.querySelectorAll(".subtab-panel").forEach((p) => p.classList.remove("active"));
-        btn.classList.add("active");
-        document.getElementById(`subtab-${btn.dataset.subtab}`).classList.add("active");
-      });
-    });
+    function toggleMenu() {
+      document.getElementById("navLinks").classList.toggle("open");
+      document.getElementById("hamburger").classList.toggle("open");
+    }
 
     function sortByClubThenName(entries) {
       return [...entries].sort((a, b) => {
@@ -79,6 +82,26 @@
           <td>${entry.club || "—"}</td>
           <td>${(entry.events || []).join(", ") || "—"}</td>
         </tr>
+      `;
+    }
+
+    function groupByClub(entries) {
+      const clubMap = {};
+      entries.forEach((entry) => {
+        const club = entry.club && entry.club.trim() !== "" ? entry.club.trim() : "Unknown";
+        if (!clubMap[club]) clubMap[club] = [];
+        clubMap[club].push(entry.name);
+      });
+      return clubMap;
+    }
+
+    function clubCardHTML(club, names) {
+      const rows = names.map((name) => `<tr><td>${name}</td></tr>`).join("");
+      return `
+        <div class="club-card">
+          <div class="club-card-header">${club}</div>
+          <table><tbody>${rows}</tbody></table>
+        </div>
       `;
     }
 
@@ -101,15 +124,22 @@
         `${tournament.startDate} — ${tournament.endDate} · ${tournament.venue}`;
 
       const visibleEntries = tournament.entriesVisible === false ? [] : entries;
-
       if (tournament.entriesVisible === false) {
         document.getElementById("overall-empty").textContent = "Not yet Available";
         document.getElementById("by-event-empty").textContent = "Not yet Available";
       }
 
-      const eventFilter = document.getElementById("event-filter");
+      const entryTabs = document.getElementById("entry-tabs");
       const events = tournament.events || [];
-      eventFilter.innerHTML = events.map((ev) => `<option value="${ev}">${ev}</option>`).join("");
+      let selectedEvent = null;
+
+      events.forEach((ev) => {
+        const btn = document.createElement("button");
+        btn.className = "entry-tab-btn";
+        btn.dataset.tab = ev;
+        btn.textContent = ev;
+        entryTabs.appendChild(btn);
+      });
 
       function renderOverall() {
         const filtered = applyFilters(visibleEntries);
@@ -120,20 +150,38 @@
       }
 
       function renderByEvent() {
-        const selected = eventFilter.value;
-        const filtered = applyFilters(visibleEntries).filter((e) => (e.events || []).includes(selected));
-        const byEventBody = document.querySelector("#entries-table-by-event tbody");
-        byEventBody.innerHTML = sortByClubThenName(filtered).map(entryRowHTML).join("");
-        document.getElementById("entries-table-by-event").hidden = filtered.length === 0;
-        document.getElementById("by-event-empty").hidden = filtered.length > 0;
+        const filtered = applyFilters(visibleEntries).filter((e) =>
+          (e.events || []).includes(selectedEvent)
+        );
+        const clubMap = groupByClub(filtered);
+        const clubs = Object.keys(clubMap).sort();
+        const grid = document.getElementById("by-event-grid");
+        grid.innerHTML = clubs.map((club) => clubCardHTML(club, clubMap[club])).join("");
+        grid.hidden = clubs.length === 0;
+        document.getElementById("by-event-empty").hidden = clubs.length > 0;
       }
 
       function renderAll() {
         renderOverall();
-        renderByEvent();
+        if (selectedEvent) renderByEvent();
       }
 
-      eventFilter.addEventListener("change", renderByEvent);
+      entryTabs.querySelectorAll(".entry-tab-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          entryTabs.querySelectorAll(".entry-tab-btn").forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          document.querySelectorAll(".entry-panel").forEach((p) => p.classList.remove("active"));
+
+          if (btn.dataset.tab === "overall") {
+            document.getElementById("panel-overall").classList.add("active");
+          } else {
+            selectedEvent = btn.dataset.tab;
+            document.getElementById("panel-by-event").classList.add("active");
+            renderByEvent();
+          }
+        });
+      });
+
       filterNameInput.addEventListener("input", renderAll);
       filterClubInput.addEventListener("input", renderAll);
       renderAll();

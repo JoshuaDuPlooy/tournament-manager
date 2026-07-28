@@ -1,0 +1,180 @@
+[
+  {
+    "id": "ead5c9c1-dac5-413d-8ca5-f4b05ec288ec",
+    "event": "u11 Boys",
+    "size": 4,
+    "round1Slots": [
+      {
+        "match": 1,
+        "p1": "1W",
+        "p2": "2R"
+      },
+      {
+        "match": 2,
+        "p1": "1R",
+        "p2": "2W"
+      }
+    ],
+    "scores": {}
+  },
+  {
+    "id": "d6e8dae1-32c6-44c1-9621-299698dfeb28",
+    "event": "u13 Girls",
+    "size": 4,
+    "round1Slots": [
+      {
+        "match": 1,
+        "p1": "1W",
+        "p2": "2R"
+      },
+      {
+        "match": 2,
+        "p1": "1R",
+        "p2": "2W"
+      }
+    ],
+    "scores": {}
+  },
+  {
+    "id": "1aa6be70-f2c1-4867-96dd-efa3e318a9e8",
+    "event": "u13 Boys",
+    "size": 16,
+    "round1Slots": [
+      {
+        "match": 1,
+        "p1": "1W",
+        "p2": "bye"
+      },
+      {
+        "match": 2,
+        "p1": "",
+        "p2": ""
+      },
+      {
+        "match": 3,
+        "p1": "",
+        "p2": ""
+      },
+      {
+        "match": 4,
+        "p1": "bye",
+        "p2": ""
+      },
+      {
+        "match": 5,
+        "p1": "",
+        "p2": "bye"
+      },
+      {
+        "match": 6,
+        "p1": "",
+        "p2": ""
+      },
+      {
+        "match": 7,
+        "p1": "",
+        "p2": ""
+      },
+      {
+        "match": 8,
+        "p1": "bye",
+        "p2": "2W"
+      }
+    ],
+    "scores": {}
+  },
+  {
+    "id": "45823025-7de5-41c3-a9c4-6049285286c4",
+    "event": "u15 Girls",
+    "size": 4,
+    "round1Slots": [
+      {
+        "match": 1,
+        "p1": "1W",
+        "p2": "2R"
+      },
+      {
+        "match": 2,
+        "p1": "1R",
+        "p2": "2W"
+      }
+    ],
+    "scores": {}
+  },
+  {
+    "id": "94190b2e-0d0f-4173-859f-1debf694ea09",
+    "event": "u15 Boys",
+    "size": 8,
+    "round1Slots": [
+      {
+        "match": 1,
+        "p1": "1W",
+        "p2": ""
+      },
+      {
+        "match": 2,
+        "p1": "",
+        "p2": ""
+      },
+      {
+        "match": 3,
+        "p1": "",
+        "p2": ""
+      },
+      {
+        "match": 4,
+        "p1": "",
+        "p2": "2W"
+      }
+    ],
+    "scores": {}
+  },
+  {
+    "id": "c8c1a3c6-489b-4cc4-ae1e-3b80dfdc4f50",
+    "event": "u19 Boys",
+    "size": 16,
+    "round1Slots": [
+      {
+        "match": 1,
+        "p1": "1W",
+        "p2": ""
+      },
+      {
+        "match": 2,
+        "p1": "",
+        "p2": ""
+      },
+      {
+        "match": 3,
+        "p1": "",
+        "p2": ""
+      },
+      {
+        "match": 4,
+        "p1": "",
+        "p2": ""
+      },
+      {
+        "match": 5,
+        "p1": "",
+        "p2": ""
+      },
+      {
+        "match": 6,
+        "p1": "",
+        "p2": ""
+      },
+      {
+        "match": 7,
+        "p1": "",
+        "p2": ""
+      },
+      {
+        "match": 8,
+        "p1": "",
+        "p2": "2W"
+      }
+    ],
+    "scores": {}
+  }
+]

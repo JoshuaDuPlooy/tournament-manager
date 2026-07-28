@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Groups</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <nav class="top-nav">
+    <div class="nav-links" id="navLinks">
+      <a href="index.html">Overview</a>
+      <a href="entries.html">Entries</a>
+      <a href="groups.html" class="active">Groups</a>
+      <a href="knockouts.html">Knockouts</a>
+      <a href="schedule.html">Schedule</a>
+    </div>
+    <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <div class="page-header">
+    <img src="logo.png" alt="Ravens Logo" />
+    <div class="page-header-text">
+      <h1 id="tournament-name">Loading…</h1>
+      <p id="tournament-subtitle"></p>
+    </div>
+  </div>
+
+  <nav class="entry-tabs-wrapper">
+    <div class="entry-tabs" id="event-tabs"></div>
+  </nav>
+
+  <main>
+    <div class="groups-grid" id="groups-grid"></div>
+    <p class="empty" id="groups-empty" hidden>No groups drawn for this event yet.</p>
+  </main>
+
+  <script src="js/data.js"></script>
+  <script>
+    function toggleMenu() {
+      document.getElementById("navLinks").classList.toggle("open");
+      document.getElementById("hamburger").classList.toggle("open");
+    }
+
+    // Points: win = 3, loss (played) = 1, walkover = 0. Games only count toward Avg if actually played.
+    function computeMatchOutcome(scoreMine, scoreTheirs) {
+      if (scoreMine === "" || scoreMine == null) return null;
+      if (scoreMine === "W") return { points: 0, gamesWon: 0, gamesLost: 0, played: false };
+      if (scoreTheirs === "W") return { points: 3, gamesWon: 0, gamesLost: 0, played: false };
+      const mine = Number(scoreMine);
+      const theirs = Number(scoreTheirs);
+      if (Number.isNaN(mine) || Number.isNaN(theirs) || mine === theirs) return null;
+      return {
+        points: mine > theirs ? 3 : 1,
+        gamesWon: mine,
+        gamesLost: theirs,
+        played: true,
+      };
+    }
+
+    function groupPlayers(group) {
+      const letters = ["A", "B", "C", "D"];
+      return letters
+        .map((letter, i) => ({
+          letter,
+          name: i === 0 ? group.seed : group[`name${i + 1}`],
+          club: i === 0 ? group.seedClub : group[`club${i + 1}`],
+        }))
+        .filter((p) => p.name && p.name.trim() !== "");
+    }
+
+    function computeStandings(group) {
+      const players = groupPlayers(group);
+      const matches = group.matches || {};
+
+      const stats = {};
+      players.forEach((p) => {
+        stats[p.letter] = { points: 0, gamesWon: 0, gamesLost: 0, matchesPlayed: 0 };
+      });
+
+      for (let i = 0; i < players.length; i++) {
+        for (let j = i + 1; j < players.length; j++) {
+          const a = players[i].letter;
+          const b = players[j].letter;
+          const pair = matches[`${a}-${b}`] || {};
+
+          const outcomeA = computeMatchOutcome(pair.a, pair.b);
+          if (outcomeA) {
+            stats[a].points += outcomeA.points;
+            if (outcomeA.played) {
+              stats[a].gamesWon += outcomeA.gamesWon;
+              stats[a].gamesLost += outcomeA.gamesLost;
+              stats[a].matchesPlayed += 1;
+            }
+          }
+
+          const outcomeB = computeMatchOutcome(pair.b, pair.a);
+          if (outcomeB) {
+            stats[b].points += outcomeB.points;
+            if (outcomeB.played) {
+              stats[b].gamesWon += outcomeB.gamesWon;
+              stats[b].gamesLost += outcomeB.gamesLost;
+              stats[b].matchesPlayed += 1;
+            }
+          }
+        }
+      }
+
+      const ranked = players
+        .map((p) => {
+          const s = stats[p.letter];
+          const avg = s.matchesPlayed > 0 ? (s.gamesWon - s.gamesLost) / s.matchesPlayed : null;
+          return { ...p, points: s.points, avg };
+        })
+        .sort((x, y) => y.points - x.points || (y.avg ?? -Infinity) - (x.avg ?? -Infinity));
+
+      ranked.forEach((p, i) => {
+        p.rank = i + 1;
+      });
+
+      return ranked;
+    }
+
+    function formatAvg(avg) {
+      return avg === null ? "—" : avg.toFixed(2);
+    }
+
+    function formatScore(pair) {
+      if (!pair || (!pair.a && !pair.b)) return "vs";
+      return `${pair.a || "–"} : ${pair.b || "–"}`;
+    }
+
+    function matchRowHTML(group, playerA, playerB) {
+      const key = `${playerA.letter}-${playerB.letter}`;
+      const pair = (group.matches || {})[key];
+      return `
+        <div class="match-row">
+          <span class="match-players">${playerA.name} vs ${playerB.name}</span>
+          <span class="match-score">${formatScore(pair)}</span>
+        </div>
+      `;
+    }
+
+    function scheduleHitsForGroup(schedule, event, groupNumber) {
+      const hits = [];
+      (schedule.rows || []).forEach((row) => {
+        Object.entries(row.cells || {}).forEach(([table, text]) => {
+          if (!text.toLowerCase().startsWith(event.toLowerCase())) return;
+          const rest = text.slice(event.length).trim().replace(/\s+/g, " ");
+          if (new RegExp(`^Group\\s+${groupNumber}$`, "i").test(rest)) {
+            hits.push({ time: row.time, table });
+          }
+        });
+      });
+      return hits;
+    }
+
+    function formatScheduleHits(hits) {
+      if (!hits || hits.length === 0) return null;
+      const times = Array.from(new Set(hits.map((h) => h.time))).sort();
+      const tables = Array.from(new Set(hits.map((h) => h.table))).sort((a, b) => Number(a) - Number(b));
+      const tableLabel = tables.length > 1 ? `Tables ${tables.join(", ")}` : `Table ${tables[0]}`;
+      return { timeLabel: times[0], tableLabel };
+    }
+
+    function groupCardHTML(g, schedule) {
+      const players = groupPlayers(g);
+      const standings = computeStandings(g);
+
+      const standingsRows = standings
+        .map(
+          (p) => `
+            <tr>
+              <td class="seed">${p.letter}</td>
+              <td>${p.name}</td>
+              <td class="club">${p.club || "—"}</td>
+              <td>${p.points}</td>
+              <td>${formatAvg(p.avg)}</td>
+              <td>${p.rank}</td>
+            </tr>
+          `
+        )
+        .join("");
+
+      const matchRows = [];
+      for (let i = 0; i < players.length; i++) {
+        for (let j = i + 1; j < players.length; j++) {
+          matchRows.push(matchRowHTML(g, players[i], players[j]));
+        }
+      }
+
+      const sched = formatScheduleHits(scheduleHitsForGroup(schedule, g.event, g.group));
+
+      return `
+        <div class="group-card">
+          <div class="group-card-meta">
+            <span class="meta-datetime">${sched ? sched.timeLabel : "—"}</span>
+            <span class="meta-table">${sched ? sched.tableLabel : "—"}</span>
+          </div>
+          <div class="group-card-header">Group ${g.group}</div>
+          <table class="standings-table">
+            <thead><tr><th></th><th>Player</th><th>Club</th><th>Pts</th><th>Avg</th><th>Rank</th></tr></thead>
+            <tbody>${standingsRows}</tbody>
+          </table>
+          <div class="matches-section">
+            <h4>Matches</h4>
+            ${matchRows.join("")}
+          </div>
+        </div>
+      `;
+    }
+
+    loadGroupsData().then(({ tournament, groups, schedule }) => {
+      document.getElementById("tournament-name").textContent = tournament.name;
+      document.getElementById("tournament-subtitle").textContent =
+        `${tournament.startDate} — ${tournament.endDate} · ${tournament.venue}`;
+
+      const visibleGroups = tournament.groupsVisible === false ? [] : groups;
+      if (tournament.groupsVisible === false) {
+        document.getElementById("groups-empty").textContent = "Not yet Available";
+      }
+
+      const events = tournament.events || [];
+      const eventTabs = document.getElementById("event-tabs");
+      let selectedEvent = events[0];
+
+      eventTabs.innerHTML = events
+        .map(
+          (ev, i) =>
+            `<button class="entry-tab-btn${i === 0 ? " active" : ""}" data-event="${ev}">${ev}</button>`
+        )
+        .join("");
+
+      function render() {
+        const filtered = visibleGroups
+          .filter((g) => g.event === selectedEvent)
+          .sort((a, b) => Number(a.group) - Number(b.group) || String(a.group).localeCompare(String(b.group)));
+
+        const grid = document.getElementById("groups-grid");
+        grid.innerHTML = filtered.map((g) => groupCardHTML(g, schedule)).join("");
+        grid.hidden = filtered.length === 0;
+        document.getElementById("groups-empty").hidden = filtered.length > 0;
+      }
+
+      eventTabs.querySelectorAll(".entry-tab-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          eventTabs.querySelectorAll(".entry-tab-btn").forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          selectedEvent = btn.dataset.event;
+          render();
+        });
+      });
+
+      render();
+    });
+  </script>
+</body>
+</html>

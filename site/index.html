@@ -7,14 +7,27 @@
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-  <header class="site-header">
-    <h1 id="tournament-name">Loading…</h1>
-    <div class="subtitle" id="tournament-subtitle"></div>
-    <nav class="site-nav">
+  <nav class="top-nav">
+    <div class="nav-links" id="navLinks">
       <a href="index.html" class="active">Overview</a>
       <a href="entries.html" id="nav-entries">Entries</a>
-    </nav>
-  </header>
+      <a href="groups.html">Groups</a>
+      <a href="knockouts.html">Knockouts</a>
+      <a href="schedule.html">Schedule</a>
+    </div>
+    <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <div class="page-header">
+    <img src="logo.png" alt="Ravens Logo" />
+    <div class="page-header-text">
+      <h1 id="tournament-name">Loading…</h1>
+      <p id="tournament-subtitle"></p>
+    </div>
+  </div>
+
   <main>
     <h2>Details</h2>
     <table>
@@ -30,6 +43,11 @@
 
   <script src="js/data.js"></script>
   <script>
+    function toggleMenu() {
+      document.getElementById("navLinks").classList.toggle("open");
+      document.getElementById("hamburger").classList.toggle("open");
+    }
+
     loadEntriesData().then(({ tournament, entries }) => {
       document.getElementById("tournament-name").textContent = tournament.name;
       document.getElementById("tournament-subtitle").textContent =

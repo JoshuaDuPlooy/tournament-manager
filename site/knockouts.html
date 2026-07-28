@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Knockouts</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <nav class="top-nav">
+    <div class="nav-links" id="navLinks">
+      <a href="index.html">Overview</a>
+      <a href="entries.html">Entries</a>
+      <a href="groups.html">Groups</a>
+      <a href="knockouts.html" class="active">Knockouts</a>
+      <a href="schedule.html">Schedule</a>
+    </div>
+    <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <div class="page-header">
+    <img src="logo.png" alt="Ravens Logo" />
+    <div class="page-header-text">
+      <h1 id="tournament-name">Loading…</h1>
+      <p id="tournament-subtitle"></p>
+    </div>
+  </div>
+
+  <nav class="entry-tabs-wrapper">
+    <div class="entry-tabs" id="event-tabs"></div>
+  </nav>
+
+  <main>
+    <div class="bracket-scroll" id="bracket-container"></div>
+    <p class="empty" id="knockouts-empty" hidden>No bracket set up for this event yet.</p>
+  </main>
+
+  <script src="js/data.js"></script>
+  <script>
+    function toggleMenu() {
+      document.getElementById("navLinks").classList.toggle("open");
+      document.getElementById("hamburger").classList.toggle("open");
+    }
+
+    function groupPlayers(group) {
+      const letters = ["A", "B", "C", "D"];
+      return letters
+        .map((letter, i) => ({
+          letter,
+          name: i === 0 ? group.seed : group[`name${i + 1}`],
+          club: i === 0 ? group.seedClub : group[`club${i + 1}`],
+        }))
+        .filter((p) => p.name && p.name.trim() !== "");
+    }
+
+    function computeMatchOutcome(scoreMine, scoreTheirs) {
+      if (scoreMine === "" || scoreMine == null) return null;
+      if (scoreMine === "W") return { points: 0, gamesWon: 0, gamesLost: 0, played: false };
+      if (scoreTheirs === "W") return { points: 3, gamesWon: 0, gamesLost: 0, played: false };
+      const mine = Number(scoreMine);
+      const theirs = Number(scoreTheirs);
+      if (Number.isNaN(mine) || Number.isNaN(theirs) || mine === theirs) return null;
+      return { points: mine > theirs ? 3 : 1, gamesWon: mine, gamesLost: theirs, played: true };
+    }
+
+    function computeStandings(group) {
+      const players = groupPlayers(group);
+      const matches = group.matches || {};
+      const stats = {};
+      players.forEach((p) => {
+        stats[p.letter] = { points: 0, gamesWon: 0, gamesLost: 0, matchesPlayed: 0 };
+      });
+
+      for (let i = 0; i < players.length; i++) {
+        for (let j = i + 1; j < players.length; j++) {
+          const a = players[i].letter;
+          const b = players[j].letter;
+          const pair = matches[`${a}-${b}`] || {};
+
+          const outcomeA = computeMatchOutcome(pair.a, pair.b);
+          if (outcomeA) {
+            stats[a].points += outcomeA.points;
+            if (outcomeA.played) {
+              stats[a].gamesWon += outcomeA.gamesWon;
+              stats[a].gamesLost += outcomeA.gamesLost;
+              stats[a].matchesPlayed += 1;
+            }
+          }
+          const outcomeB = computeMatchOutcome(pair.b, pair.a);
+          if (outcomeB) {
+            stats[b].points += outcomeB.points;
+            if (outcomeB.played) {
+              stats[b].gamesWon += outcomeB.gamesWon;
+              stats[b].gamesLost += outcomeB.gamesLost;
+              stats[b].matchesPlayed += 1;
+            }
+          }
+        }
+      }
+
+      const ranked = players
+        .map((p) => {
+          const s = stats[p.letter];
+          const avg = s.matchesPlayed > 0 ? (s.gamesWon - s.gamesLost) / s.matchesPlayed : null;
+          return { ...p, points: s.points, avg };
+        })
+        .sort((x, y) => y.points - x.points || (y.avg ?? -Infinity) - (x.avg ?? -Infinity));
+
+      ranked.forEach((p, i) => (p.rank = i + 1));
+      return ranked;
+    }
+
+    function isGroupComplete(group) {
+      const players = groupPlayers(group);
+      if (players.length === 0) return false;
+      const matches = group.matches || {};
+      for (let i = 0; i < players.length; i++) {
+        for (let j = i + 1; j < players.length; j++) {
+          const pair = matches[`${players[i].letter}-${players[j].letter}`];
+          if (!pair || pair.a === "" || pair.a == null || pair.b === "" || pair.b == null) return false;
+        }
+      }
+      return true;
+    }
+
+    function resolveSlot(rawValue, groupsForEvent) {
+      if (!rawValue) return { label: "—", resolved: false, name: "", club: "", isBye: false };
+      if (rawValue === "bye") return { label: "BYE", resolved: true, name: "BYE", club: "", isBye: true };
+      const m = rawValue.match(/^(\d+)(W|R)$/);
+      if (!m) return { label: rawValue, resolved: false, name: "", club: "", isBye: false };
+      const [, groupNum, pos] = m;
+      const placeholder = `${groupNum}${pos}`;
+      const group = groupsForEvent.find((g) => String(g.group) === groupNum);
+      if (!group || !isGroupComplete(group)) {
+        return { label: placeholder, resolved: false, name: "", club: "", isBye: false };
+      }
+      const standings = computeStandings(group);
+      const player = standings[pos === "W" ? 0 : 1];
+      if (!player) return { label: placeholder, resolved: false, name: "", club: "", isBye: false };
+      return { label: player.name, resolved: true, name: player.name, club: player.club, isBye: false };
+    }
+
+    function matchWinnerSide(score) {
+      if (!score) return null;
+      const { a, b } = score;
+      if (a === "" || a == null || b === "" || b == null) return null;
+      if (a === "W" && b === "W") return null;
+      if (a === "W") return "b";
+      if (b === "W") return "a";
+      const na = Number(a);
+      const nb = Number(b);
+      if (Number.isNaN(na) || Number.isNaN(nb) || na === nb) return null;
+      return na > nb ? "a" : "b";
+    }
+
+    function totalKnockoutRounds(size) {
+      return Math.round(Math.log2(size));
+    }
+
+    function knockoutRoundLabel(roundNumber, totalRoundsCount) {
+      const fromEnd = totalRoundsCount - roundNumber;
+      if (fromEnd === 0) return "Final";
+      if (fromEnd === 1) return "Semifinal";
+      if (fromEnd === 2) return "Quarterfinal";
+      return `Round of ${Math.pow(2, fromEnd + 1)}`;
+    }
+
+    function resolveBracket(bracket, groupsForEvent) {
+      const rounds = totalKnockoutRounds(bracket.size);
+      const roundsData = [];
+
+      const round1 = (bracket.round1Slots || []).map((slot) => {
+        const p1 = resolveSlot(slot.p1, groupsForEvent);
+        const p2 = resolveSlot(slot.p2, groupsForEvent);
+        const key = `R1M${slot.match}`;
+        const score = (bracket.scores || {})[key] || { a: "", b: "" };
+        let winnerSide = null;
+        if (p1.isBye && p2.resolved && !p2.isBye) winnerSide = "b";
+        else if (p2.isBye && p1.resolved && !p1.isBye) winnerSide = "a";
+        else if (p1.resolved && p2.resolved && !p1.isBye && !p2.isBye) winnerSide = matchWinnerSide(score);
+        const isByeMatch = p1.isBye || p2.isBye;
+        return { match: slot.match, p1, p2, score, winnerSide, key, isByeMatch };
+      });
+
+      // Bye matches never get played, so schedules number only the real matches — a round-1
+      // match's schedule "Match N" skips over any earlier byes in the round.
+      let scheduleMatchCounter = 0;
+      round1.forEach((m) => {
+        m.scheduleMatchNumber = m.isByeMatch ? null : ++scheduleMatchCounter;
+      });
+
+      roundsData.push(round1);
+
+      for (let r = 2; r <= rounds; r++) {
+        const prevRound = roundsData[r - 2];
+        const matchesInRound = bracket.size / Math.pow(2, r);
+        const roundMatches = [];
+        for (let m = 1; m <= matchesInRound; m++) {
+          const feedA = prevRound[(m - 1) * 2];
+          const feedB = prevRound[(m - 1) * 2 + 1];
+          const p1 =
+            feedA && feedA.winnerSide
+              ? feedA.winnerSide === "a"
+                ? feedA.p1
+                : feedA.p2
+              : { label: feedA ? `Winner M${feedA.match}` : "—", resolved: false, name: "", club: "", isBye: false };
+          const p2 =
+            feedB && feedB.winnerSide
+              ? feedB.winnerSide === "a"
+                ? feedB.p1
+                : feedB.p2
+              : { label: feedB ? `Winner M${feedB.match}` : "—", resolved: false, name: "", club: "", isBye: false };
+          const key = `R${r}M${m}`;
+          const score = (bracket.scores || {})[key] || { a: "", b: "" };
+          const winnerSide = p1.resolved && p2.resolved ? matchWinnerSide(score) : null;
+          roundMatches.push({ match: m, p1, p2, score, winnerSide, key });
+        }
+        roundsData.push(roundMatches);
+      }
+
+      const totalRoundsCount = roundsData.length;
+      roundsData.forEach((roundMatches, idx) => {
+        roundMatches.forEach((m) => {
+          m.roundNumber = idx + 1;
+          m.totalRounds = totalRoundsCount;
+        });
+      });
+
+      return roundsData;
+    }
+
+    function scheduleRoundTokenMatches(token, roundNumber, totalRoundsCount) {
+      const fromEnd = totalRoundsCount - roundNumber;
+      const t = token.toLowerCase().replace(/\s+/g, "");
+      if (fromEnd === 0) return t.startsWith("final");
+      if (fromEnd === 1) return t.startsWith("semi");
+      if (fromEnd === 2) return t.startsWith("quat");
+      const size = Math.pow(2, fromEnd + 1);
+      return t === `r${size}` || t.startsWith(`round${size}`) || t.startsWith(`roundof${size}`);
+    }
+
+    function scheduleHitsForMatch(schedule, event, roundNumber, totalRoundsCount, matchNumber) {
+      const hits = [];
+      (schedule.rows || []).forEach((row) => {
+        Object.entries(row.cells || {}).forEach(([table, text]) => {
+          if (!text.toLowerCase().startsWith(event.toLowerCase())) return;
+          const rest = text.slice(event.length).trim().replace(/\s+/g, " ");
+          const m = rest.match(/^(.*?)\s+Match\s+(\d+)$/i);
+          if (!m || Number(m[2]) !== matchNumber) return;
+          if (!scheduleRoundTokenMatches(m[1].trim(), roundNumber, totalRoundsCount)) return;
+          hits.push({ time: row.time, table });
+        });
+      });
+      return hits;
+    }
+
+    function formatScheduleHits(hits) {
+      if (!hits || hits.length === 0) return null;
+      const times = Array.from(new Set(hits.map((h) => h.time))).sort();
+      const tables = Array.from(new Set(hits.map((h) => h.table))).sort((a, b) => Number(a) - Number(b));
+      const tableLabel = tables.length > 1 ? `Tables ${tables.join(", ")}` : `Table ${tables[0]}`;
+      return { timeLabel: times[0], tableLabel };
+    }
+
+    function koPlayerRowHTML(m, sideKey) {
+      const player = sideKey === "a" ? m.p1 : m.p2;
+      const otherResolved = sideKey === "a" ? m.p2.resolved : m.p1.resolved;
+      let cls = "";
+      if (m.winnerSide) cls = m.winnerSide === sideKey ? " winner" : " loser";
+      const scoreValue = sideKey === "a" ? m.score.a : m.score.b;
+      const showScore = m.p1.resolved && m.p2.resolved && !m.p1.isBye && !m.p2.isBye && scoreValue;
+      return `
+        <div class="ko-match-player${cls}">
+          <span class="ko-player-name${player.resolved ? "" : " placeholder"}">${player.resolved ? player.label : ""}</span>
+          <span class="ko-player-club">${player.club || ""}</span>
+          <span class="ko-player-score">${showScore ? scoreValue : ""}</span>
+        </div>
+      `;
+    }
+
+    function koMatchMetaHTML(m, event, schedule) {
+      const isRound1 = m.roundNumber === 1;
+      if (isRound1 && m.isByeMatch) return "";
+      const matchNumber = isRound1 ? m.scheduleMatchNumber : m.match;
+      if (matchNumber == null) return "";
+      const hits = scheduleHitsForMatch(schedule, event, m.roundNumber, m.totalRounds, matchNumber);
+      const sched = formatScheduleHits(hits);
+      if (!sched) return "";
+      return `<div class="ko-match-meta"><span>${sched.timeLabel}</span><span>${sched.tableLabel}</span></div>`;
+    }
+
+    function koMatchCardHTML(m, event, schedule) {
+      return `<div class="ko-match-card">${koMatchMetaHTML(m, event, schedule)}${koPlayerRowHTML(m, "a")}${koPlayerRowHTML(m, "b")}</div>`;
+    }
+
+    loadKnockoutsData().then(({ tournament, knockouts, groups, schedule }) => {
+      document.getElementById("tournament-name").textContent = tournament.name;
+      document.getElementById("tournament-subtitle").textContent =
+        `${tournament.startDate} — ${tournament.endDate} · ${tournament.venue}`;
+
+      const events = tournament.events || [];
+      const eventTabs = document.getElementById("event-tabs");
+      let selectedEvent = events[0];
+
+      eventTabs.innerHTML = events
+        .map(
+          (ev, i) =>
+            `<button class="entry-tab-btn${i === 0 ? " active" : ""}" data-event="${ev}">${ev}</button>`
+        )
+        .join("");
+
+      function render() {
+        const knockoutsVisible = tournament.knockoutsVisible || {};
+        const container = document.getElementById("bracket-container");
+        const emptyMsg = document.getElementById("knockouts-empty");
+
+        if (knockoutsVisible[selectedEvent] === false) {
+          container.innerHTML = "";
+          emptyMsg.hidden = false;
+          emptyMsg.textContent = "Not yet Available";
+          return;
+        }
+
+        const bracket = knockouts.find((b) => b.event === selectedEvent);
+        if (!bracket) {
+          container.innerHTML = "";
+          emptyMsg.hidden = false;
+          emptyMsg.textContent = "No bracket set up for this event yet.";
+          return;
+        }
+
+        emptyMsg.hidden = true;
+        const groupsForEvent = groups.filter((g) => g.event === selectedEvent);
+        const roundsData = resolveBracket(bracket, groupsForEvent);
+        const totalRoundsCount = roundsData.length;
+
+        const html = roundsData
+          .map(
+            (roundMatches, idx) => `
+              <div class="round-col">
+                <div class="round-header">${knockoutRoundLabel(idx + 1, totalRoundsCount)}</div>
+                <div class="round-matches">
+                  ${roundMatches.map((m) => koMatchCardHTML(m, selectedEvent, schedule)).join("")}
+                </div>
+              </div>
+            `
+          )
+          .join("");
+
+        container.innerHTML = `<div class="bracket">${html}</div>`;
+      }
+
+      eventTabs.querySelectorAll(".entry-tab-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          eventTabs.querySelectorAll(".entry-tab-btn").forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          selectedEvent = btn.dataset.event;
+          render();
+        });
+      });
+
+      render();
+    });
+  </script>
+</body>
+</html>

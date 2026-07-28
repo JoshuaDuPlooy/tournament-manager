@@ -19,3 +19,30 @@ async function loadEntriesData() {
   ]);
   return { tournament, entries };
 }
+
+async function loadGroupsData() {
+  const [tournament, groups, schedule] = await Promise.all([
+    loadJSON("data/tournament.json"),
+    loadJSON("data/groups.json"),
+    loadJSON("data/schedule.json"),
+  ]);
+  return { tournament, groups, schedule };
+}
+
+async function loadKnockoutsData() {
+  const [tournament, knockouts, groups, schedule] = await Promise.all([
+    loadJSON("data/tournament.json"),
+    loadJSON("data/knockouts.json"),
+    loadJSON("data/groups.json"),
+    loadJSON("data/schedule.json"),
+  ]);
+  return { tournament, knockouts, groups, schedule };
+}
+
+async function loadScheduleData() {
+  const [tournament, schedule] = await Promise.all([
+    loadJSON("data/tournament.json"),
+    loadJSON("data/schedule.json"),
+  ]);
+  return { tournament, schedule };
+}

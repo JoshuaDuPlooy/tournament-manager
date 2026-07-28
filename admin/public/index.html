@@ -13,6 +13,9 @@
     <nav class="tabs">
       <button class="tab-btn active" data-tab="tournament">Tournament Info</button>
       <button class="tab-btn" data-tab="entries">Entries</button>
+      <button class="tab-btn" data-tab="groups">Groups</button>
+      <button class="tab-btn" data-tab="knockouts">Knockouts</button>
+      <button class="tab-btn" data-tab="schedule">Schedule</button>
     </nav>
   </header>
 
@@ -117,6 +120,86 @@
           <button type="button" id="entry-cancel" class="secondary" hidden>Cancel</button>
         </div>
       </form>
+    </section>
+
+    <section id="tab-groups" class="tab-panel">
+      <div class="tab-header-row">
+        <h2>Groups</h2>
+        <label class="visibility-toggle">
+          <input type="checkbox" id="groups-visible-toggle" />
+          <span class="toggle-switch"></span>
+          <span class="toggle-label">Visible on public site</span>
+        </label>
+      </div>
+
+      <div class="import-bar">
+        <button type="button" id="groups-import-btn" class="secondary">Import from Groups.xlsx</button>
+        <span id="groups-import-status" class="status-msg"></span>
+      </div>
+
+      <nav class="tabs subtabs" id="groups-event-tabs"></nav>
+
+      <div class="groups-grid" id="groups-grid"></div>
+      <p class="empty" id="groups-empty" hidden>No groups drawn for this event yet.</p>
+
+      <h3>National Rankings</h3>
+      <p id="rankings-status" class="status-msg"></p>
+      <table id="rankings-table">
+        <thead>
+          <tr><th>Name</th><th>Club</th><th>National Ranking</th></tr>
+        </thead>
+        <tbody id="rankings-tbody"></tbody>
+      </table>
+      <p class="empty" id="rankings-empty" hidden>No entries for this event yet.</p>
+    </section>
+
+    <section id="tab-knockouts" class="tab-panel">
+      <h2>Knockouts</h2>
+
+      <nav class="tabs subtabs" id="knockouts-event-tabs"></nav>
+
+      <div class="tab-header-row">
+        <label class="event-filter-label" id="knockouts-size-row">Bracket size
+          <select id="knockouts-size-select">
+            <option value="">— Set up bracket —</option>
+            <option value="4">4</option>
+            <option value="8">8</option>
+            <option value="16">16</option>
+            <option value="32">32</option>
+          </select>
+        </label>
+        <label class="visibility-toggle">
+          <input type="checkbox" id="knockouts-visible-toggle" />
+          <span class="toggle-switch"></span>
+          <span class="toggle-label">Visible on public site</span>
+        </label>
+      </div>
+
+      <div id="knockouts-bracket" class="bracket-scroll"></div>
+      <p class="empty" id="knockouts-empty" hidden>No bracket set up for this event yet.</p>
+    </section>
+
+    <section id="tab-schedule" class="tab-panel">
+      <div class="tab-header-row">
+        <h2>Schedule</h2>
+        <label class="visibility-toggle">
+          <input type="checkbox" id="schedule-visible-toggle" />
+          <span class="toggle-switch"></span>
+          <span class="toggle-label">Visible on public site</span>
+        </label>
+      </div>
+
+      <div class="import-bar">
+        <button type="button" id="schedule-import-btn" class="secondary">Import from Schedule.xlsx</button>
+        <span id="schedule-import-status" class="status-msg"></span>
+      </div>
+
+      <div class="legend" id="schedule-legend"></div>
+
+      <div class="table-scroll">
+        <table class="schedule-table" id="schedule-table"></table>
+      </div>
+      <p class="empty" id="schedule-empty" hidden>No schedule imported yet.</p>
     </section>
   </main>
 
