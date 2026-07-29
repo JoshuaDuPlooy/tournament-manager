@@ -7,7 +7,7 @@
       "u13 Girls",
       "u15 Girls"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "ea210ad2-0d50-4797-b2a9-abc7aac7727d",
@@ -17,7 +17,7 @@
       "u11 Boys",
       "u13 Boys"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "494f49df-6fb5-49dd-84a6-f2a8563cae5f",
@@ -27,7 +27,7 @@
       "u11 Girls",
       "u13 Girls"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "8b6ab34d-abcc-4159-b55a-69fa11d78ad0",
@@ -37,7 +37,7 @@
       "u11 Boys",
       "u13 Boys"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "5e7d4379-6d51-41b8-bc38-fe2cfcc85cd1",
@@ -47,7 +47,7 @@
       "u15 Boys",
       "u19 Boys"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "3e573e0a-bdad-450a-ad6b-a2a05d0aab4c",
@@ -57,7 +57,7 @@
       "u11 Boys",
       "u13 Boys"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "a7ebf97d-5827-4cf7-9e84-5ece01b4c34a",
@@ -67,7 +67,7 @@
       "u15 Boys",
       "u19 Boys"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "b6958db6-f2cf-480a-b06e-ae8db8ff0ce5",
@@ -141,7 +141,7 @@
     "events": [
       "u15 Girls"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "ce9b45f3-0623-402d-952d-fa5b2ad9479b",
@@ -150,7 +150,7 @@
     "events": [
       "u19 Girls"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "0f3abdb5-fd87-483a-9cdc-826835ccf2db",
@@ -169,7 +169,7 @@
     "events": [
       "u19 Boys"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "1a0c7c26-0266-4e68-92f2-76cf9a18f395",
@@ -206,7 +206,7 @@
     "events": [
       "u19 Boys"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "281a5fbc-95b3-4bbd-a6d9-71323ddf5e6a",
@@ -515,5 +515,15 @@
       "u15 Boys"
     ],
     "paid": false
+  },
+  {
+    "id": "6d4bf6d5-17d9-4efa-a8c9-7b6665bfb6bb",
+    "name": "Remy Zarzoozny",
+    "club": "Mother City",
+    "events": [
+      "u11 Boys",
+      "u13 Boys"
+    ],
+    "paid": true
   }
 ]

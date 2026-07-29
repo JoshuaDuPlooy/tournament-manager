@@ -547,6 +547,40 @@ function formatAvg(avg) {
   return avg === null ? "—" : avg.toFixed(2);
 }
 
+const GROUP_MATCH_ORDER = {
+  2: [["A", "B"]],
+  3: [
+    ["B", "C"],
+    ["A", "C"],
+    ["A", "B"],
+  ],
+  4: [
+    ["A", "D"],
+    ["B", "C"],
+    ["A", "C"],
+    ["B", "D"],
+    ["C", "D"],
+    ["A", "B"],
+  ],
+};
+
+function orderedMatchPairs(players) {
+  const order = GROUP_MATCH_ORDER[players.length];
+  const pairLetters = [];
+  if (order) {
+    order.forEach(([a, b]) => pairLetters.push([a, b]));
+  } else {
+    for (let i = 0; i < players.length; i++) {
+      for (let j = i + 1; j < players.length; j++) {
+        pairLetters.push([players[i].letter, players[j].letter]);
+      }
+    }
+  }
+  return pairLetters
+    .map(([a, b]) => [players.find((p) => p.letter === a), players.find((p) => p.letter === b)])
+    .filter(([pa, pb]) => pa && pb);
+}
+
 function matchRowHTML(group, playerA, playerB) {
   const key = `${playerA.letter}-${playerB.letter}`;
   const pair = (group.matches || {})[key] || {};
@@ -579,12 +613,7 @@ function groupCardHTML(group) {
     )
     .join("");
 
-  const matchRows = [];
-  for (let i = 0; i < players.length; i++) {
-    for (let j = i + 1; j < players.length; j++) {
-      matchRows.push(matchRowHTML(group, players[i], players[j]));
-    }
-  }
+  const matchRows = orderedMatchPairs(players).map(([pa, pb]) => matchRowHTML(group, pa, pb));
 
   const sched = formatScheduleHits(scheduleHitsForGroup(state.schedule, group.event, group.group));
 
