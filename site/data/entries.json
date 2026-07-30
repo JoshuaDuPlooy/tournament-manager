@@ -80,15 +80,6 @@
     "paid": true
   },
   {
-    "id": "8dd58456-0c0e-4883-a1d7-fbe4ac07d13f",
-    "name": "Qaa'im Jacobs",
-    "club": "Community House",
-    "events": [
-      "u19 Boys"
-    ],
-    "paid": false
-  },
-  {
     "id": "df01c701-3344-4f21-af9e-213a158d1ef3",
     "name": "Owais Jacobs",
     "club": "Community House",
@@ -236,7 +227,7 @@
       "u13 Boys",
       "u15 Boys"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "3d024093-c217-49ae-be6f-effa77519485",
@@ -381,7 +372,7 @@
       "u11 Girls",
       "u13 Girls"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "003d4af2-1a5f-46e6-9095-84aa889bd558",
@@ -391,7 +382,7 @@
       "u11 Girls",
       "u13 Girls"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "50e47134-e8ed-4e31-8864-a99f9987b595",
@@ -401,7 +392,7 @@
       "u11 Boys",
       "u13 Boys"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "af096482-a719-47da-bb41-1020f173a15a",
@@ -411,7 +402,7 @@
       "u13 Boys",
       "u15 Boys"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "103a3856-1a87-4f8c-bb75-72e51024a80d",
@@ -421,7 +412,7 @@
       "u15 Girls",
       "u19 Girls"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "d09c088d-7a23-4457-8f9e-6b5d5eeb7809",
@@ -431,7 +422,7 @@
       "u15 Boys",
       "u19 Boys"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "59193ae7-ad27-4bde-bdcb-45abf1257817",
@@ -440,7 +431,7 @@
     "events": [
       "u19 Girls"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "8708ad83-28fd-4ba8-a6f6-eb7257d4c82e",
@@ -449,7 +440,7 @@
     "events": [
       "u19 Boys"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "8b97dd6f-38fd-4d32-a825-397bae557a0f",
@@ -458,7 +449,7 @@
     "events": [
       "u19 Boys"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "b331f258-58ba-4a35-9ffc-89f1c2cf4723",
@@ -468,7 +459,7 @@
       "u15 Boys",
       "u19 Boys"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "a6a62f31-203d-4885-899d-ec3b47bbedfc",
