@@ -16,7 +16,7 @@
   "venue": "Ravens Multipurpose Centre",
   "entryFee": 60,
   "entriesVisible": true,
-  "groupsVisible": false,
+  "groupsVisible": true,
   "scheduleVisible": true,
   "knockoutsVisible": {
     "u11 Girls": false,

@@ -114,7 +114,7 @@
     "events": [
       "u11 Boys"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "cbf0ba30-853b-4685-8fbe-3c69e9efc8af",
@@ -179,7 +179,7 @@
       "u11 Girls",
       "u13 Girls"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "ece8d597-2c49-4e00-88d1-79b8425c742d",
@@ -207,7 +207,7 @@
       "u15 Boys",
       "u19 Boys"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "a098eadc-b6c3-46ef-8688-a69d15ab6557",
@@ -217,7 +217,7 @@
       "u13 Boys",
       "u15 Boys"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "b1ef49c1-bd54-46dc-8ccc-ae4c6a856240",
@@ -505,7 +505,7 @@
       "u13 Boys",
       "u15 Boys"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "6d4bf6d5-17d9-4efa-a8c9-7b6665bfb6bb",

@@ -7,7 +7,8 @@
   "scripts": {
     "start": "node server.js",
     "scorecards": "node scripts/generate-scorecards.js",
-    "brackets": "node scripts/generate-bracket-sheets.js"
+    "brackets": "node scripts/generate-bracket-sheets.js",
+    "schedule-pdf": "node scripts/generate-schedule-pdf.js"
   },
   "dependencies": {
     "exceljs": "^4.4.0",

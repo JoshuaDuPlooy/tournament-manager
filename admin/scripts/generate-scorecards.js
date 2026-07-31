@@ -1,16 +1,10 @@
-// Generates ONE combined PDF from the current tournament data:
-//   admin/output/Scorecards.pdf
+// Generates two PDFs from the current tournament data:
+//   admin/output/Group Scorecards.pdf    — one scorecard per group (+ 5 blank at the end)
+//   admin/output/Knockout Scorecards.pdf — one scorecard per knockout match (+ 10 blank at the end)
 //
-// Contents, in order:
-//   1. Every group scorecard + every knockout match scorecard, interleaved in schedule order
-//      (by time, then table). A group played across multiple tables gets one scorecard per
-//      table it appears on. Knockout scorecards leave player names blank.
-//   2. 5 blank group scorecards, then 10 blank knockout scorecards, appended at the end.
-//
-// Each scorecard is a clone of "Group Scorecard.xlsx" / "Knockout Scorecard.xlsx" (one sheet
-// per entry) combined into a single workbook, then converted to PDF via Excel COM automation
-// (scripts/xlsx-to-pdf.ps1) — Excel exports every sheet of a workbook into one PDF, in sheet
-// order, respecting each sheet's own page setup (orientation, fit-to-page, centering).
+// Each PDF is built by cloning "Group Scorecard.xlsx" / "Knockout Scorecard.xlsx" once per
+// entry into a combined workbook (one sheet per entry, ordered by scheduled time then table),
+// then converting that workbook to PDF via Excel COM automation (scripts/xlsx-to-pdf.ps1).
 //
 // Run with: npm run scorecards   (from the admin/ folder)
 
@@ -30,11 +24,12 @@ const BLANK_GROUP_CARDS = 5;
 const BLANK_KNOCKOUT_CARDS = 10;
 
 // Excel's "fit to page" only ever shrinks content, never enlarges it — so a scorecard whose
-// native size is already smaller than a page prints undersized (this is why the knockout
-// cards weren't filling the page). Cloned sheets are oversized by this factor before fit-to-page
-// is applied, forcing a real shrink-to-fit that lands on the true maximum same-aspect-ratio
-// size for the page, however small the template originally was. The result is independent of
-// the exact factor chosen, as long as it's large enough to push the content past one page.
+// native size is already smaller than a page prints undersized. Cloned sheets are oversized by
+// this factor (rows, columns, AND font size together) before fit-to-page is applied, forcing a
+// real shrink-to-fit that lands on the true maximum same-aspect-ratio size for the page. The
+// result is independent of the exact factor chosen, as long as it's large enough to push the
+// content past one page — the font is scaled by the same factor so the enlargement lands on the
+// page layout only, not on relative text size (which would otherwise shrink right along with it).
 const FILL_SCALE_FACTOR = 5;
 const DEFAULT_COL_WIDTH = 8.43;
 const DEFAULT_ROW_HEIGHT = 15;
@@ -208,7 +203,6 @@ function buildGroupEntries(groups, schedule) {
     const slots = hits.length > 0 ? hits : [null];
     slots.forEach((hit, hitIdx) => {
       entries.push({
-        type: "group",
         group: g,
         event: g.event,
         time: hit ? hit.time : null,
@@ -237,7 +231,6 @@ function buildKnockoutEntries(knockouts, schedule) {
       const matchNumber = scheduleMatchCounter;
       const hit = firstHit(scheduleHitsForMatch(schedule, bracket.event, 1, totalRounds, matchNumber));
       entries.push({
-        type: "knockout",
         event: bracket.event,
         round: knockoutRoundLabel(1, totalRounds),
         match: matchNumber,
@@ -253,7 +246,6 @@ function buildKnockoutEntries(knockouts, schedule) {
       for (let m = 1; m <= matchesInRound; m++) {
         const hit = firstHit(scheduleHitsForMatch(schedule, bracket.event, r, totalRounds, m));
         entries.push({
-          type: "knockout",
           event: bracket.event,
           round: knockoutRoundLabel(r, totalRounds),
           match: m,
@@ -295,6 +287,51 @@ function fillKnockoutSheet(sheet, entry) {
 
 // ---- main ----
 
+async function generateGroupScorecards(groups, schedule, groupTemplateSheet) {
+  const entries = buildGroupEntries(groups, schedule).sort(compareEntries);
+  const outputWb = new ExcelJS.Workbook();
+
+  entries.forEach((entry) => {
+    const g = entry.group;
+    const sheet = cloneSheet(outputWb, groupTemplateSheet, uniqueSheetName(outputWb, `${g.event} G${g.group}`));
+    fillGroupSheet(sheet, g, entry);
+  });
+
+  for (let i = 1; i <= BLANK_GROUP_CARDS; i++) {
+    cloneSheet(outputWb, groupTemplateSheet, uniqueSheetName(outputWb, `Blank Group ${i}`));
+  }
+
+  const xlsxPath = path.join(OUTPUT_DIR, "Group Scorecards.xlsx");
+  const pdfPath = path.join(OUTPUT_DIR, "Group Scorecards.pdf");
+  await outputWb.xlsx.writeFile(xlsxPath);
+  console.log(`Built ${entries.length} group + ${BLANK_GROUP_CARDS} blank scorecard(s) — converting to PDF…`);
+  convertToPdf(xlsxPath, pdfPath);
+}
+
+async function generateKnockoutScorecards(knockouts, schedule, knockoutTemplateSheet) {
+  const entries = buildKnockoutEntries(knockouts, schedule).sort(compareEntries);
+  const outputWb = new ExcelJS.Workbook();
+
+  entries.forEach((entry) => {
+    const sheet = cloneSheet(
+      outputWb,
+      knockoutTemplateSheet,
+      uniqueSheetName(outputWb, `${entry.event} ${entry.round} M${entry.match}`)
+    );
+    fillKnockoutSheet(sheet, entry);
+  });
+
+  for (let i = 1; i <= BLANK_KNOCKOUT_CARDS; i++) {
+    cloneSheet(outputWb, knockoutTemplateSheet, uniqueSheetName(outputWb, `Blank Knockout ${i}`));
+  }
+
+  const xlsxPath = path.join(OUTPUT_DIR, "Knockout Scorecards.xlsx");
+  const pdfPath = path.join(OUTPUT_DIR, "Knockout Scorecards.pdf");
+  await outputWb.xlsx.writeFile(xlsxPath);
+  console.log(`Built ${entries.length} knockout + ${BLANK_KNOCKOUT_CARDS} blank scorecard(s) — converting to PDF…`);
+  convertToPdf(xlsxPath, pdfPath);
+}
+
 async function main() {
   const groups = JSON.parse(fs.readFileSync(path.join(DATA_DIR, "groups.json"), "utf-8"));
   const knockouts = JSON.parse(fs.readFileSync(path.join(DATA_DIR, "knockouts.json"), "utf-8"));
@@ -310,45 +347,10 @@ async function main() {
   await knockoutTemplateWb.xlsx.readFile(KNOCKOUT_TEMPLATE);
   const knockoutTemplateSheet = knockoutTemplateWb.worksheets[0];
 
-  const groupEntries = buildGroupEntries(groups, schedule);
-  const knockoutEntries = buildKnockoutEntries(knockouts, schedule);
-  const combined = [...groupEntries, ...knockoutEntries].sort(compareEntries);
+  await generateGroupScorecards(groups, schedule, groupTemplateSheet);
+  await generateKnockoutScorecards(knockouts, schedule, knockoutTemplateSheet);
 
-  const outputWb = new ExcelJS.Workbook();
-
-  combined.forEach((entry) => {
-    if (entry.type === "group") {
-      const g = entry.group;
-      const sheet = cloneSheet(outputWb, groupTemplateSheet, uniqueSheetName(outputWb, `${g.event} G${g.group}`));
-      fillGroupSheet(sheet, g, entry);
-    } else {
-      const sheet = cloneSheet(
-        outputWb,
-        knockoutTemplateSheet,
-        uniqueSheetName(outputWb, `${entry.event} ${entry.round} M${entry.match}`)
-      );
-      fillKnockoutSheet(sheet, entry);
-    }
-  });
-
-  for (let i = 1; i <= BLANK_GROUP_CARDS; i++) {
-    cloneSheet(outputWb, groupTemplateSheet, uniqueSheetName(outputWb, `Blank Group ${i}`));
-  }
-  for (let i = 1; i <= BLANK_KNOCKOUT_CARDS; i++) {
-    cloneSheet(outputWb, knockoutTemplateSheet, uniqueSheetName(outputWb, `Blank Knockout ${i}`));
-  }
-
-  const xlsxPath = path.join(OUTPUT_DIR, "Scorecards.xlsx");
-  const pdfPath = path.join(OUTPUT_DIR, "Scorecards.pdf");
-  await outputWb.xlsx.writeFile(xlsxPath);
-
-  console.log(
-    `Built ${groupEntries.length} group + ${knockoutEntries.length} knockout scorecard(s), ` +
-      `plus ${BLANK_GROUP_CARDS} blank group + ${BLANK_KNOCKOUT_CARDS} blank knockout card(s) — converting to PDF…`
-  );
-  convertToPdf(xlsxPath, pdfPath);
-
-  console.log("Done. See admin/output/Scorecards.pdf");
+  console.log("Done. See admin/output/");
 }
 
 main().catch((err) => {
