@@ -22,11 +22,11 @@
     "u11 Girls": false,
     "u19 Girls": false,
     "u13 Boys": true,
-    "u11 Boys": false,
-    "u13 Girls": false,
+    "u11 Boys": true,
+    "u13 Girls": true,
     "u15 Girls": true,
-    "u15 Boys": false,
-    "u19 Boys": false
+    "u15 Boys": true,
+    "u19 Boys": true
   },
   "pointsWin": 3,
   "pointsDraw": 1,
