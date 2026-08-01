@@ -21,10 +21,10 @@
   "knockoutsVisible": {
     "u11 Girls": false,
     "u19 Girls": false,
-    "u13 Boys": false,
+    "u13 Boys": true,
     "u11 Boys": false,
     "u13 Girls": false,
-    "u15 Girls": false,
+    "u15 Girls": true,
     "u15 Boys": false,
     "u19 Boys": false
   },
