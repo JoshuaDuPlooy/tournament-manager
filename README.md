@@ -89,16 +89,15 @@ load the JSON files.)
 | Path | Source |
 | --- | --- |
 | `/` | `landing/` |
-| `/junior/` | `Ravens 2026 Junior Championships/site/` |
-| `/savets/` | not published yet |
+| `/ravens-junior/` | `Ravens 2026 Junior Championships/site/` |
+| `/savets-2026/` | `Savets 2026/site/` |
 
-The Junior site used to sit at the Pages root; it now lives under `/junior/`, and the
-root is a landing page linking to it. Links saved against the old root URLs need
-updating.
+Paths come from each tournament's `publicPath`, so the config is the single source
+of truth; the workflow reads it rather than hardcoding the path.
 
-To publish Savets when its site is ready: uncomment the "Add Savets site at /savets/"
-step in the workflow, and swap the placeholder `<li class="upcoming">` in
-`landing/index.html` for a link to `savets/`.
+The Junior site used to sit at the Pages root; it now lives under `/ravens-junior/`,
+and the root is a landing page linking to both tournaments. Links saved against the
+old root URLs need updating.
 
 ## Adding another tournament
 
@@ -108,7 +107,8 @@ step in the workflow, and swap the placeholder `<li class="upcoming">` in
 3. Blank its `site/data/` files: `[]` for entries/groups/knockouts/teams/fixtures,
    `{"tables": [], "rows": []}` for schedule, and set the name/season/events in
    `tournament.json` (or do that in the control panel).
-4. Add it to `start-servers.bat`, the deploy workflow, and `landing/index.html`.
+4. Add its folder to the `TOURNAMENTS` list in the deploy workflow, and add it to
+   `start-servers.bat` and `landing/index.html`.
 
 ## Working spreadsheets
 
