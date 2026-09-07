@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Entries</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/theme.css" />
+</head>
+<body>
+  <nav class="top-nav">
+    <div class="nav-links" id="navLinks">
+      <a href="index.html">Overview</a>
+      <a href="entries.html" id="nav-entries" class="active">Entries</a>
+      <a href="groups.html">Groups</a>
+      <a href="knockouts.html">Knockouts</a>
+      <a href="schedule.html">Schedule</a>
+    </div>
+    <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <div class="page-header">
+    <img src="logo.png" alt="Tournament logo" />
+    <div class="page-header-text">
+      <h1 id="tournament-name">Loading…</h1>
+      <p id="tournament-subtitle"></p>
+    </div>
+  </div>
+
+  <nav class="entry-tabs-wrapper">
+    <div class="entry-tabs" id="entry-tabs">
+      <button class="entry-tab-btn active" data-tab="overall">Overall</button>
+    </div>
+  </nav>
+
+  <main>
+    <h2>Entries</h2>
+
+    <div id="entries-content">
+      <div class="filter-bar">
+        <label>Name <input type="text" id="filter-name" placeholder="Search name" /></label>
+        <label>Club <input type="text" id="filter-club" placeholder="Search club" /></label>
+      </div>
+
+      <div id="panel-overall" class="entry-panel active">
+        <table id="entries-table-overall">
+          <thead>
+            <tr><th>Name</th><th>Club</th><th>Events</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <p class="empty" id="overall-empty" hidden>No entries yet.</p>
+      </div>
+
+      <div id="panel-by-event" class="entry-panel">
+        <div class="clubs-grid" id="by-event-grid"></div>
+        <p class="empty" id="by-event-empty" hidden>No entries for this event yet.</p>
+      </div>
+    </div>
+  </main>
+
+  <script src="js/data.js"></script>
+  <script>
+    function toggleMenu() {
+      document.getElementById("navLinks").classList.toggle("open");
+      document.getElementById("hamburger").classList.toggle("open");
+    }
+
+    function sortByClubThenName(entries) {
+      return [...entries].sort((a, b) => {
+        const clubCompare = (a.club || "").localeCompare(b.club || "");
+        if (clubCompare !== 0) return clubCompare;
+        return (a.name || "").localeCompare(b.name || "");
+      });
+    }
+
+    function entryRowHTML(entry) {
+      return `
+        <tr>
+          <td>${entry.name}</td>
+          <td>${entry.club || "—"}</td>
+          <td>${(entry.events || []).join(", ") || "—"}</td>
+        </tr>
+      `;
+    }
+
+    function groupByClub(entries) {
+      const clubMap = {};
+      entries.forEach((entry) => {
+        const club = entry.club && entry.club.trim() !== "" ? entry.club.trim() : "Unknown";
+        if (!clubMap[club]) clubMap[club] = [];
+        clubMap[club].push(entry.name);
+      });
+      return clubMap;
+    }
+
+    function clubCardHTML(club, names) {
+      const rows = names.map((name) => `<tr><td>${name}</td></tr>`).join("");
+      return `
+        <div class="club-card">
+          <div class="club-card-header">${club}</div>
+          <table><tbody>${rows}</tbody></table>
+        </div>
+      `;
+    }
+
+    const filterNameInput = document.getElementById("filter-name");
+    const filterClubInput = document.getElementById("filter-club");
+
+    function applyFilters(entries) {
+      const name = filterNameInput.value.trim().toLowerCase();
+      const club = filterClubInput.value.trim().toLowerCase();
+      return entries.filter((entry) => {
+        if (name && !(entry.name || "").toLowerCase().includes(name)) return false;
+        if (club && !(entry.club || "").toLowerCase().includes(club)) return false;
+        return true;
+      });
+    }
+
+    loadEntriesData().then(({ tournament, entries }) => {
+      document.getElementById("tournament-name").textContent = tournament.name;
+      document.getElementById("tournament-subtitle").textContent =
+        `${tournament.startDate} — ${tournament.endDate} · ${tournament.venue}`;
+
+      const visibleEntries = tournament.entriesVisible === false ? [] : entries;
+      if (tournament.entriesVisible === false) {
+        document.getElementById("overall-empty").textContent = "Not yet Available";
+        document.getElementById("by-event-empty").textContent = "Not yet Available";
+      }
+
+      const entryTabs = document.getElementById("entry-tabs");
+      const events = tournament.events || [];
+      let selectedEvent = null;
+
+      events.forEach((ev) => {
+        const btn = document.createElement("button");
+        btn.className = "entry-tab-btn";
+        btn.dataset.tab = ev;
+        btn.textContent = ev;
+        entryTabs.appendChild(btn);
+      });
+
+      function renderOverall() {
+        const filtered = applyFilters(visibleEntries);
+        const overallBody = document.querySelector("#entries-table-overall tbody");
+        overallBody.innerHTML = sortByClubThenName(filtered).map(entryRowHTML).join("");
+        document.getElementById("entries-table-overall").hidden = filtered.length === 0;
+        document.getElementById("overall-empty").hidden = filtered.length > 0;
+      }
+
+      function renderByEvent() {
+        const filtered = applyFilters(visibleEntries).filter((e) =>
+          (e.events || []).includes(selectedEvent)
+        );
+        const clubMap = groupByClub(filtered);
+        const clubs = Object.keys(clubMap).sort();
+        const grid = document.getElementById("by-event-grid");
+        grid.innerHTML = clubs.map((club) => clubCardHTML(club, clubMap[club])).join("");
+        grid.hidden = clubs.length === 0;
+        document.getElementById("by-event-empty").hidden = clubs.length > 0;
+      }
+
+      function renderAll() {
+        renderOverall();
+        if (selectedEvent) renderByEvent();
+      }
+
+      entryTabs.querySelectorAll(".entry-tab-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          entryTabs.querySelectorAll(".entry-tab-btn").forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          document.querySelectorAll(".entry-panel").forEach((p) => p.classList.remove("active"));
+
+          if (btn.dataset.tab === "overall") {
+            document.getElementById("panel-overall").classList.add("active");
+          } else {
+            selectedEvent = btn.dataset.tab;
+            document.getElementById("panel-by-event").classList.add("active");
+            renderByEvent();
+          }
+        });
+      });
+
+      filterNameInput.addEventListener("input", renderAll);
+      filterClubInput.addEventListener("input", renderAll);
+      renderAll();
+    });
+  </script>
+</body>
+</html>

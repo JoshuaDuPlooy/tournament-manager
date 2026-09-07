@@ -1,56 +1,124 @@
-# Ravens 2026 Juniors — Tournament Manager
+# Ravens Tournament Manager
 
-A static tournament website (overview page) that reads from JSON files, plus
-a local control panel for editing the tournament info.
+Runs more than one tournament from a single repo. Each tournament is a self-contained
+folder holding its own control panel, public site and data. The `admin/` and `site/`
+code is identical across tournaments — only `tournament.config.json` and
+`site/data/*.json` differ — so adding a tournament is a copy-and-edit, not a rewrite.
 
 ## Structure
 
 ```
-site/            Public static site — deploy this folder as-is to any static host
-  index.html     Overview page (tournament details + division/team counts)
-  css/style.css
-  js/data.js       Fetches the JSON files
-  data/
-    tournament.json  Name, dates, divisions, points system
-    teams.json       Teams (used for the division counts on the overview page)
-    fixtures.json    Schedule + results data (not currently shown on the site)
+Ravens 2026 Junior Championships/
+  tournament.config.json   Identity + ports for this tournament
+  site/                    Public static site - deployed to /junior/
+    index.html             Overview (details + entry counts per event)
+    entries.html           Entry list
+    groups.html            Group draws + results
+    knockouts.html         Knockout brackets
+    schedule.html          Table-by-table schedule
+    css/style.css
+    js/data.js             Fetches the JSON files
+    data/                  tournament / entries / groups / knockouts / schedule / teams / fixtures
+  admin/                   Local control panel - never deployed
+    server.js              Express JSON API reading/writing ../site/data/*.json
+    public/                Admin UI (Tournament Info, Entries, Groups, Knockouts, Schedule)
+    scripts/               Scorecard / bracket / schedule PDF generators
+    *.xlsx                 Templates and import sources
 
-admin/           Local control panel — do not deploy this folder
-  server.js      Express server with a JSON API that reads/writes site/data/tournament.json
-  public/        Admin UI (Tournament Info form)
+Savets 2026/               Same layout, own config and own (empty) data
+  tournament.config.json
+  site/
+  admin/
+
+landing/                   Pages root - links to each published tournament
+.github/workflows/         Assembles and deploys the public sites
+start-servers.bat          Menu: start Junior, Savets, or both
 ```
 
-Note: `teams.json` and `fixtures.json` still exist as data files but no
-longer have an editing UI — edit them by hand, or ask for the Teams/Fixtures
-admin tabs to be added back if you need that later.
+## tournament.config.json
 
-## Editing tournament data
+```json
+{
+  "id": "junior",
+  "name": "Ravens 2026 Junior Championships",
+  "shortName": "Junior",
+  "adminPort": 4000,
+  "sitePort": 3000,
+  "publicPath": "junior"
+}
+```
+
+`adminPort` is what `admin/server.js` listens on, so the two control panels can run at
+the same time without clashing. `name` is shown in the control panel header and browser
+tab. `publicPath` is the folder the site is published under on GitHub Pages.
+
+Note the public site takes its own heading and tab title from
+`site/data/tournament.json` (edited in the control panel), not from this file.
+
+## Running locally
+
+Double-click `start-servers.bat` and pick a tournament, or do it by hand:
 
 ```
-cd admin
+cd "Ravens 2026 Junior Championships/admin"
 npm install
 npm start
 ```
 
-Open http://localhost:4000 and edit the tournament info form. Saving writes
-directly to `site/data/tournament.json`.
+| Tournament | Control panel | Site preview |
+| --- | --- | --- |
+| Ravens 2026 Junior Championships | http://localhost:4000 | http://localhost:3000 |
+| Savets 2026 | http://localhost:4001 | http://localhost:3001 |
 
-## Viewing the public site
+`npm install` is per tournament — each `admin/` has its own `node_modules`.
 
-The site is plain HTML/CSS/JS with no build step — just serve the `site/`
-folder statically. For local preview:
+For the site preview:
 
 ```
-cd site
-npx serve .
+cd "Ravens 2026 Junior Championships/site"
+npx serve . -l 3000
 ```
 
-(Opening `index.html` directly with `file://` won't work because `fetch()`
-needs an HTTP server to load the JSON files.)
+(Opening `index.html` over `file://` won't work — `fetch()` needs an HTTP server to
+load the JSON files.)
 
-## Deploying
+## Published URLs
 
-Deploy the contents of `site/` (including its `data/` folder) to any static
-host — GitHub Pages, Netlify, Vercel static hosting, etc. After editing data
-locally with the control panel, re-upload/re-deploy the `site/` folder to
-publish the changes.
+`.github/workflows/deploy-pages.yml` assembles a `_site/` on every push to `main`:
+
+| Path | Source |
+| --- | --- |
+| `/` | `landing/` |
+| `/junior/` | `Ravens 2026 Junior Championships/site/` |
+| `/savets/` | not published yet |
+
+The Junior site used to sit at the Pages root; it now lives under `/junior/`, and the
+root is a landing page linking to it. Links saved against the old root URLs need
+updating.
+
+To publish Savets when its site is ready: uncomment the "Add Savets site at /savets/"
+step in the workflow, and swap the placeholder `<li class="upcoming">` in
+`landing/index.html` for a link to `savets/`.
+
+## Adding another tournament
+
+1. Copy an existing tournament folder and rename it.
+2. Edit its `tournament.config.json` — new `id`, `name`, `shortName`, an unused
+   `adminPort`/`sitePort`, and a `publicPath`.
+3. Blank its `site/data/` files: `[]` for entries/groups/knockouts/teams/fixtures,
+   `{"tables": [], "rows": []}` for schedule, and set the name/season/events in
+   `tournament.json` (or do that in the control panel).
+4. Add it to `start-servers.bat`, the deploy workflow, and `landing/index.html`.
+
+## Working spreadsheets
+
+Some admin features read a fixed workbook from that tournament's `admin/` folder:
+
+| File | Used by |
+| --- | --- |
+| `Groups.xlsx` | Groups tab - import a group draw (one sheet per event) |
+| `Rankings.xlsx` | Rankings lookup - sheet named "All Rankings" |
+| `Schedule.xlsx` | Schedule tab - import the table/time grid |
+
+These are per tournament and gitignored — drop your own copies into the relevant
+`admin/` folder. Generated PDFs land in that tournament's `admin/output/`.

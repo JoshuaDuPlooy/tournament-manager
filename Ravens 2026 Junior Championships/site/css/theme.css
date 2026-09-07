@@ -1,0 +1,11 @@
+/* Ravens 2026 Junior Championships palette. */
+:root {
+  --color-accent: #2EB4EA;
+  --color-on-accent: #000000;
+  --color-accent-edge: #1a9fd4;
+  --color-accent-tint: #f5fffe;
+  --color-banner-bg: #2EB4EA;
+  --color-on-banner: #000000;
+  --color-nav-bg: #111111;
+  --color-header-bg: #111111;
+}

@@ -1,0 +1,12 @@
+/* Savets 2026 palette, taken from the SAVETTS shield logo:
+   royal blue field, South Africa green, gold ribbon lettering. */
+:root {
+  --color-accent: #6EA032;
+  --color-on-accent: #000000;
+  --color-accent-edge: #C8B43C;
+  --color-accent-tint: #F3F7EE;
+  --color-banner-bg: #3232AA;
+  --color-on-banner: #FFFFFF;
+  --color-nav-bg: #1B1B4D;
+  --color-header-bg: #2A2A85;
+}

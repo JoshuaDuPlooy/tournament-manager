@@ -1,0 +1,8 @@
+{
+  "id": "savets",
+  "name": "Savets 2026",
+  "shortName": "Savets",
+  "adminPort": 4001,
+  "sitePort": 3001,
+  "publicPath": "savets"
+}

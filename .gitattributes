@@ -1,2 +1,16 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Never line-ending-normalize binary assets. Spreadsheets and PDFs are read by
+# ExcelJS/pdfkit and by Excel itself; a single rewritten byte corrupts them.
+*.xlsx binary
+*.xls  binary
+*.xlsm binary
+*.docx binary
+*.pptx binary
+*.pdf  binary
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary

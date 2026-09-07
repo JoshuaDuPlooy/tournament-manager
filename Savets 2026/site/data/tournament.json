@@ -1,0 +1,34 @@
+{
+  "name": "SAVETTS 2026",
+  "season": "2026",
+  "events": [
+    "Women's 35+",
+    "Women's 50+",
+    "Men's 40+",
+    "Men's 50+",
+    "Men's 60+",
+    "Ladies Doubles",
+    "Men's Doubles",
+    "Mixed Doubles"
+  ],
+  "startDate": "2026-09-11",
+  "endDate": "2026-09-12",
+  "venue": "Ravensmead Multipurpose Centre, 189 Christians St, Ravensmead, 7504",
+  "entryFee": 120,
+  "entriesVisible": true,
+  "groupsVisible": false,
+  "scheduleVisible": true,
+  "knockoutsVisible": {
+    "Women's 35+": false,
+    "Women's 50+": false,
+    "Men's 40+": false,
+    "Men's 50+": false,
+    "Men's 60+": false,
+    "Ladies Doubles": false,
+    "Men's Doubles": false,
+    "Mixed Doubles": false
+  },
+  "pointsWin": 3,
+  "pointsDraw": 1,
+  "pointsLoss": 0
+}

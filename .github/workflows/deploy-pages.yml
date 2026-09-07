@@ -1,9 +1,17 @@
-name: Deploy public site to GitHub Pages
+name: Deploy public sites to GitHub Pages
 
+# Each tournament's site/ folder is published under its own path, so the Pages root
+# is a landing page that links to them:
+#   /          landing/            (tournament index)
+#   /junior/   Ravens 2026 Junior Championships/site/
+#   /savets/   Savets 2026/site/   (not published yet - see the commented step below)
+
+# AUTOMATIC DEPLOYMENT IS OFF.
+# The two tournaments are being split onto their own separate Pages sites, so this
+# single-site workflow must not publish over them in the meantime. The push trigger is
+# removed deliberately; the job can still be started by hand from the Actions tab
+# ("Run workflow") if you need the combined /junior/ preview back.
 on:
-  push:
-    branches: ["main"]
-    paths: ["site/**"]
   workflow_dispatch:
 
 permissions:
@@ -24,12 +32,33 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
-      - name: Upload site/ as Pages artifact
+
+      - name: Assemble landing page
+        run: |
+          rm -rf _site
+          mkdir -p _site
+          cp -r landing/. _site/
+
+      - name: Add Junior site at /junior/
+        run: |
+          mkdir -p "_site/junior"
+          cp -r "Ravens 2026 Junior Championships/site/." "_site/junior/"
+
+      # Uncomment when the Savets public site is ready to go live, and update
+      # landing/index.html to link to it.
+      # - name: Add Savets site at /savets/
+      #   run: |
+      #     mkdir -p "_site/savets"
+      #     cp -r "Savets 2026/site/." "_site/savets/"
+
+      - name: Upload _site as Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: "site"
+          path: "_site"
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

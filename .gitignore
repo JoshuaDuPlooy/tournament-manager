@@ -1,6 +1,17 @@
 node_modules/
-admin/Groups.xlsx
-admin/Rankings.xlsx
-admin/EntryList.xlsx
-admin/EntryListLate.xlsx
-admin/output/
+
+# Local working spreadsheets, per tournament folder. These are inputs you drop into
+# a tournament's admin/ folder for import; they are not part of the system.
+*/admin/Groups.xlsx
+*/admin/Rankings.xlsx
+*/admin/EntryList.xlsx
+*/admin/EntryListLate.xlsx
+
+# Generated PDFs/spreadsheets from the admin scripts.
+*/admin/output/
+
+# Built by the Pages workflow.
+_site/
+
+# Excel/Office lock files, created while a workbook is open.
+~$*

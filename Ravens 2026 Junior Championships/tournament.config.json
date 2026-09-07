@@ -1,0 +1,8 @@
+{
+  "id": "junior",
+  "name": "Ravens 2026 Junior Championships",
+  "shortName": "Junior",
+  "adminPort": 4000,
+  "sitePort": 3000,
+  "publicPath": "junior"
+}
