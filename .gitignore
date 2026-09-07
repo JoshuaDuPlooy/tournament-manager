@@ -17,3 +17,7 @@ _site/
 
 # Excel/Office lock files, created while a workbook is open.
 ~$*
+
+# Separate Next.js project that lives in this folder but is not part of the
+# tournament manager. Untracked deliberately - it was committed here by accident.
+webapp/
