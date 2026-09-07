@@ -3,9 +3,11 @@ node_modules/
 # Local working spreadsheets, per tournament folder. These are inputs you drop into
 # a tournament's admin/ folder for import; they are not part of the system.
 */admin/Groups.xlsx
-*/admin/Rankings.xlsx
 */admin/EntryList.xlsx
 */admin/EntryListLate.xlsx
+
+# Rankings.xlsx IS tracked: the control panel's rankings lookup reads it, so a fresh
+# clone would have a rankings tab that cannot work without it.
 
 # Generated PDFs/spreadsheets from the admin scripts.
 */admin/output/
