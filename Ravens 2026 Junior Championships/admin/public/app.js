@@ -915,10 +915,19 @@ function isGroupComplete(group) {
   return true;
 }
 
-// A round-1 slot is stored as "", "bye", or "<groupNumber><W|R>" e.g. "3W".
-function resolveSlot(rawValue, groupsForEvent) {
+// A round-1 slot is stored as "", "bye", "entry:<id>", or "<groupNumber><W|R>" e.g. "3W".
+// "entry:<id>" names a competitor directly, for events drawn straight into a knockout
+// with no group stage (the doubles events); the group forms are resolved from standings
+// once that group has finished.
+function resolveSlot(rawValue, groupsForEvent, entriesForEvent) {
   if (!rawValue) return { label: "—", resolved: false, name: "", club: "", isBye: false };
   if (rawValue === "bye") return { label: "BYE", resolved: true, name: "BYE", club: "", isBye: true };
+  if (rawValue.startsWith("entry:")) {
+    const id = rawValue.slice("entry:".length);
+    const entry = (entriesForEvent || []).find((e) => e.id === id);
+    if (!entry) return { label: "(entry removed)", resolved: false, name: "", club: "", isBye: false };
+    return { label: entry.name, resolved: true, name: entry.name, club: entry.club || "", isBye: false };
+  }
   const m = rawValue.match(/^(\d+)(W|R)$/);
   if (!m) return { label: rawValue, resolved: false, name: "", club: "", isBye: false };
   const [, groupNum, pos] = m;
@@ -958,13 +967,13 @@ function knockoutRoundLabel(roundNumber, totalRoundsCount) {
   return `Round of ${Math.pow(2, fromEnd + 1)}`;
 }
 
-function resolveBracket(bracket, groupsForEvent) {
+function resolveBracket(bracket, groupsForEvent, entriesForEvent) {
   const rounds = totalKnockoutRounds(bracket.size);
   const roundsData = [];
 
   const round1 = (bracket.round1Slots || []).map((slot) => {
-    const p1 = resolveSlot(slot.p1, groupsForEvent);
-    const p2 = resolveSlot(slot.p2, groupsForEvent);
+    const p1 = resolveSlot(slot.p1, groupsForEvent, entriesForEvent);
+    const p2 = resolveSlot(slot.p2, groupsForEvent, entriesForEvent);
     const key = `R1M${slot.match}`;
     const score = (bracket.scores || {})[key] || { a: "", b: "" };
     let winnerSide = null;
@@ -1022,6 +1031,15 @@ function resolveBracket(bracket, groupsForEvent) {
   return roundsData;
 }
 
+function entriesForKnockoutsEvent() {
+  return state.entries
+    .filter((e) => (e.events || []).includes(selectedKnockoutsEvent))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+// Offers both ways of filling a slot: the group placeholders (1W, 2R, ...) for events
+// with a group stage, and the event's entries by name for events drawn straight into the
+// knockout. An event with no groups simply shows no placeholders.
 function slotOptionsHTML(selectedValue) {
   const groupNums = Array.from(
     new Set(state.groups.filter((g) => g.event === selectedKnockoutsEvent).map((g) => String(g.group)))
@@ -1029,10 +1047,32 @@ function slotOptionsHTML(selectedValue) {
 
   let html = `<option value="">— empty —</option>`;
   html += `<option value="bye"${selectedValue === "bye" ? " selected" : ""}>BYE</option>`;
-  groupNums.forEach((n) => {
-    html += `<option value="${n}W"${selectedValue === `${n}W` ? " selected" : ""}>${n}W</option>`;
-    html += `<option value="${n}R"${selectedValue === `${n}R` ? " selected" : ""}>${n}R</option>`;
-  });
+
+  if (groupNums.length) {
+    html += `<optgroup label="From groups">`;
+    groupNums.forEach((n) => {
+      html += `<option value="${n}W"${selectedValue === `${n}W` ? " selected" : ""}>${n}W</option>`;
+      html += `<option value="${n}R"${selectedValue === `${n}R` ? " selected" : ""}>${n}R</option>`;
+    });
+    html += `</optgroup>`;
+  }
+
+  const entries = entriesForKnockoutsEvent();
+  if (entries.length) {
+    html += `<optgroup label="Entries">`;
+    entries.forEach((e) => {
+      const value = `entry:${e.id}`;
+      const label = e.club ? `${e.name} (${e.club})` : e.name;
+      html += `<option value="${value}"${selectedValue === value ? " selected" : ""}>${label}</option>`;
+    });
+    html += `</optgroup>`;
+  }
+
+  // A slot pointing at an entry that has since been deleted would otherwise vanish
+  // silently from the dropdown and look empty.
+  if (selectedValue && !html.includes(`value="${selectedValue}"`)) {
+    html += `<option value="${selectedValue}" selected>(entry removed)</option>`;
+  }
   return html;
 }
 
@@ -1131,7 +1171,8 @@ function renderKnockoutsBracket() {
   knockoutsSizeSelect.value = String(bracket.size);
 
   const groupsForEvent = state.groups.filter((g) => g.event === selectedKnockoutsEvent);
-  const roundsData = resolveBracket(bracket, groupsForEvent);
+  const entriesForEvent = entriesForKnockoutsEvent();
+  const roundsData = resolveBracket(bracket, groupsForEvent, entriesForEvent);
   const totalRoundsCount = roundsData.length;
 
   const html = roundsData

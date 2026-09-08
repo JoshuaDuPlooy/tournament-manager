@@ -1,23 +1,13 @@
+# Installed dependencies - thousands of files, and "npm install" rebuilds them.
 node_modules/
 
-# Local working spreadsheets, per tournament folder. These are inputs you drop into
-# a tournament's admin/ folder for import; they are not part of the system.
-*/admin/Groups.xlsx
-*/admin/EntryList.xlsx
-*/admin/EntryListLate.xlsx
-
-# Rankings.xlsx IS tracked: the control panel's rankings lookup reads it, so a fresh
-# clone would have a rankings tab that cannot work without it.
-
-# Generated PDFs/spreadsheets from the admin scripts.
-*/admin/output/
-
-# Built by the Pages workflow.
+# Assembled by the Pages workflow on every run.
 _site/
 
-# Excel/Office lock files, created while a workbook is open.
+# Excel/Office lock files. These exist only while a workbook is open and are deleted
+# when it closes, so a committed one is always stale.
 ~$*
 
-# Separate Next.js project that lives in this folder but is not part of the
-# tournament manager. Untracked deliberately - it was committed here by accident.
+# Separate Next.js project that lives in this folder but is not part of the tournament
+# manager. Committed here by accident once; kept out deliberately.
 webapp/

@@ -41,14 +41,17 @@ async function loadGroupsData() {
 }
 
 async function loadKnockoutsData() {
-  const [tournament, knockouts, groups, schedule] = await Promise.all([
+  // entries.json is needed because a bracket slot may name a competitor directly
+  // ("entry:<id>") rather than referencing a group placing.
+  const [tournament, knockouts, groups, schedule, entries] = await Promise.all([
     loadJSON("data/tournament.json"),
     loadJSON("data/knockouts.json"),
     loadJSON("data/groups.json"),
     loadJSON("data/schedule.json"),
+    loadJSON("data/entries.json"),
   ]);
   applyTournamentTitle(tournament);
-  return { tournament, knockouts, groups, schedule };
+  return { tournament, knockouts, groups, schedule, entries };
 }
 
 async function loadScheduleData() {

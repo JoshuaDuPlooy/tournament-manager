@@ -126,9 +126,17 @@
       return true;
     }
 
-    function resolveSlot(rawValue, groupsForEvent) {
+    // A slot is "", "bye", "entry:<id>" (a competitor named directly, for events drawn
+    // straight into a knockout with no group stage), or "<groupNumber><W|R>".
+    function resolveSlot(rawValue, groupsForEvent, entriesForEvent) {
       if (!rawValue) return { label: "—", resolved: false, name: "", club: "", isBye: false };
       if (rawValue === "bye") return { label: "BYE", resolved: true, name: "BYE", club: "", isBye: true };
+      if (rawValue.startsWith("entry:")) {
+        const id = rawValue.slice("entry:".length);
+        const entry = (entriesForEvent || []).find((e) => e.id === id);
+        if (!entry) return { label: "—", resolved: false, name: "", club: "", isBye: false };
+        return { label: entry.name, resolved: true, name: entry.name, club: entry.club || "", isBye: false };
+      }
       const m = rawValue.match(/^(\d+)(W|R)$/);
       if (!m) return { label: rawValue, resolved: false, name: "", club: "", isBye: false };
       const [, groupNum, pos] = m;
@@ -168,13 +176,13 @@
       return `Round of ${Math.pow(2, fromEnd + 1)}`;
     }
 
-    function resolveBracket(bracket, groupsForEvent) {
+    function resolveBracket(bracket, groupsForEvent, entriesForEvent) {
       const rounds = totalKnockoutRounds(bracket.size);
       const roundsData = [];
 
       const round1 = (bracket.round1Slots || []).map((slot) => {
-        const p1 = resolveSlot(slot.p1, groupsForEvent);
-        const p2 = resolveSlot(slot.p2, groupsForEvent);
+        const p1 = resolveSlot(slot.p1, groupsForEvent, entriesForEvent);
+        const p2 = resolveSlot(slot.p2, groupsForEvent, entriesForEvent);
         const key = `R1M${slot.match}`;
         const score = (bracket.scores || {})[key] || { a: "", b: "" };
         let winnerSide = null;
@@ -296,7 +304,7 @@
       return `<div class="ko-match-card">${koMatchMetaHTML(m, event, schedule)}${koPlayerRowHTML(m, "a")}${koPlayerRowHTML(m, "b")}</div>`;
     }
 
-    loadKnockoutsData().then(({ tournament, knockouts, groups, schedule }) => {
+    loadKnockoutsData().then(({ tournament, knockouts, groups, schedule, entries }) => {
       document.getElementById("tournament-name").textContent = tournament.name;
       document.getElementById("tournament-subtitle").textContent =
         `${tournament.startDate} — ${tournament.endDate} · ${tournament.venue}`;
@@ -334,7 +342,8 @@
 
         emptyMsg.hidden = true;
         const groupsForEvent = groups.filter((g) => g.event === selectedEvent);
-        const roundsData = resolveBracket(bracket, groupsForEvent);
+        const entriesForEvent = entries.filter((e) => (e.events || []).includes(selectedEvent));
+        const roundsData = resolveBracket(bracket, groupsForEvent, entriesForEvent);
         const totalRoundsCount = roundsData.length;
 
         const html = roundsData
