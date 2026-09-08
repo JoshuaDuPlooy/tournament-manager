@@ -40,6 +40,19 @@ function formatScheduleCell(text, event) {
 
 // ---- Schedule lookups (used by Groups and Knockouts to show time/table) ----
 
+// Each sheet of Schedule.xlsx is a day, and every row records the day it belongs to.
+// Schedules imported before days existed have neither, and count as one unnamed day.
+function scheduleDayList(schedule) {
+  if (!schedule) return [];
+  if (Array.isArray(schedule.days) && schedule.days.length) return schedule.days;
+  const seen = [];
+  (schedule.rows || []).forEach((row) => {
+    const d = row.day || "";
+    if (!seen.includes(d)) seen.push(d);
+  });
+  return seen;
+}
+
 function scheduleHitsForGroup(schedule, event, groupNumber) {
   const hits = [];
   (schedule.rows || []).forEach((row) => {
@@ -47,7 +60,7 @@ function scheduleHitsForGroup(schedule, event, groupNumber) {
       if (!text.toLowerCase().startsWith(event.toLowerCase())) return;
       const rest = text.slice(event.length).trim().replace(/\s+/g, " ");
       if (new RegExp(`^Group\\s+${groupNumber}$`, "i").test(rest)) {
-        hits.push({ time: row.time, table });
+        hits.push({ day: row.day || "", time: row.time, table });
       }
     });
   });
@@ -75,7 +88,7 @@ function scheduleHitsForMatch(schedule, event, roundNumber, totalRoundsCount, ma
       const m = rest.match(/^(.*?)\s+Match\s+(\d+)$/i);
       if (!m || Number(m[2]) !== matchNumber) return;
       if (!scheduleRoundTokenMatches(m[1].trim(), roundNumber, totalRoundsCount)) return;
-      hits.push({ time: row.time, table });
+      hits.push({ day: row.day || "", time: row.time, table });
     });
   });
   return hits;
@@ -86,7 +99,11 @@ function formatScheduleHits(hits) {
   const times = Array.from(new Set(hits.map((h) => h.time))).sort();
   const tables = Array.from(new Set(hits.map((h) => h.table))).sort((a, b) => Number(a) - Number(b));
   const tableLabel = tables.length > 1 ? `Tables ${tables.join(", ")}` : `Table ${tables[0]}`;
-  return { timeLabel: times[0], tableLabel };
+  // The day is only worth showing once a schedule actually spans more than one.
+  const days = Array.from(new Set(hits.map((h) => h.day).filter(Boolean)));
+  const scheduleDays = scheduleDayList(state.schedule);
+  const timeLabel = days.length === 1 && scheduleDays.length > 1 ? `${days[0]} ${times[0]}` : times[0];
+  return { timeLabel, tableLabel };
 }
 
 async function api(path, options) {
@@ -1314,6 +1331,8 @@ function renderScheduleTable() {
   table.hidden = false;
   emptyMsg.hidden = true;
 
+  const days = scheduleDayList(schedule);
+
   const thead = `
     <thead>
       <tr>
@@ -1323,11 +1342,7 @@ function renderScheduleTable() {
     </thead>
   `;
 
-  const tbody = `
-    <tbody>
-      ${schedule.rows
-        .map(
-          (row) => `
+  const bodyRow = (row) => `
             <tr>
               <td class="time-col">${row.time}</td>
               ${schedule.tables
@@ -1340,8 +1355,22 @@ function renderScheduleTable() {
                 })
                 .join("")}
             </tr>
-          `
-        )
+          `;
+
+  // With more than one day, each day gets its own banded section so identical times on
+  // different days are never mistaken for the same slot.
+  const tbody = `
+    <tbody>
+      ${days
+        .map((day) => {
+          const dayRows = schedule.rows.filter((r) => (r.day || "") === day);
+          if (dayRows.length === 0) return "";
+          const heading =
+            days.length > 1
+              ? `<tr class="sched-day-row"><th class="sched-day" colspan="${schedule.tables.length + 1}">${day}</th></tr>`
+              : "";
+          return heading + dayRows.map(bodyRow).join("");
+        })
         .join("")}
     </tbody>
   `;

@@ -46,6 +46,19 @@
 
     const EVENT_COLORS = ["#FFD6D6", "#FFE8C2", "#FFF6BF", "#DFFFD6", "#C2F0E8", "#C2E0FF", "#D9C2FF", "#FFC2E8"];
 
+    // Each sheet of Schedule.xlsx is a day; every row records the day it belongs to.
+    // Schedules published before days existed have neither, and count as one unnamed day.
+    function scheduleDayList(schedule) {
+      if (!schedule) return [];
+      if (Array.isArray(schedule.days) && schedule.days.length) return schedule.days;
+      const seen = [];
+      (schedule.rows || []).forEach((row) => {
+        const d = row.day || "";
+        if (!seen.includes(d)) seen.push(d);
+      });
+      return seen;
+    }
+
     loadScheduleData().then(({ tournament, schedule }) => {
       document.getElementById("tournament-name").textContent = tournament.name;
       document.getElementById("tournament-subtitle").textContent =
@@ -106,11 +119,9 @@
           </thead>
         `;
 
-        const tbody = `
-          <tbody>
-            ${schedule.rows
-              .map(
-                (row) => `
+        const days = scheduleDayList(schedule);
+
+        const bodyRow = (row) => `
                   <tr>
                     <td class="time-col">${row.time}</td>
                     ${schedule.tables
@@ -123,8 +134,22 @@
                       })
                       .join("")}
                   </tr>
-                `
-              )
+                `;
+
+        // With more than one day, each day gets its own heading row so identical times on
+        // different days are never mistaken for the same slot.
+        const tbody = `
+          <tbody>
+            ${days
+              .map((day) => {
+                const dayRows = schedule.rows.filter((r) => (r.day || "") === day);
+                if (dayRows.length === 0) return "";
+                const heading =
+                  days.length > 1
+                    ? `<tr><th class="sched-day" colspan="${schedule.tables.length + 1}">${day}</th></tr>`
+                    : "";
+                return heading + dayRows.map(bodyRow).join("");
+              })
               .join("")}
           </tbody>
         `;

@@ -185,19 +185,36 @@
           if (!text.toLowerCase().startsWith(event.toLowerCase())) return;
           const rest = text.slice(event.length).trim().replace(/\s+/g, " ");
           if (new RegExp(`^Group\\s+${groupNumber}$`, "i").test(rest)) {
-            hits.push({ time: row.time, table });
+            hits.push({ day: row.day || "", time: row.time, table });
           }
         });
       });
       return hits;
     }
 
-    function formatScheduleHits(hits) {
+    // Each sheet of Schedule.xlsx is a day; every row records the day it belongs to.
+    // Schedules published before days existed have neither, and count as one unnamed day.
+    function scheduleDayList(schedule) {
+      if (!schedule) return [];
+      if (Array.isArray(schedule.days) && schedule.days.length) return schedule.days;
+      const seen = [];
+      (schedule.rows || []).forEach((row) => {
+        const d = row.day || "";
+        if (!seen.includes(d)) seen.push(d);
+      });
+      return seen;
+    }
+
+    function formatScheduleHits(hits, schedule) {
       if (!hits || hits.length === 0) return null;
       const times = Array.from(new Set(hits.map((h) => h.time))).sort();
       const tables = Array.from(new Set(hits.map((h) => h.table))).sort((a, b) => Number(a) - Number(b));
       const tableLabel = tables.length > 1 ? `Tables ${tables.join(", ")}` : `Table ${tables[0]}`;
-      return { timeLabel: times[0], tableLabel };
+      // The day is only worth showing once a schedule actually spans more than one.
+      const days = Array.from(new Set(hits.map((h) => h.day).filter(Boolean)));
+      const allDays = scheduleDayList(schedule);
+      const timeLabel = days.length === 1 && allDays.length > 1 ? `${days[0]} ${times[0]}` : times[0];
+      return { timeLabel, tableLabel };
     }
 
     function groupCardHTML(g, schedule) {
@@ -221,7 +238,7 @@
 
       const matchRows = orderedMatchPairs(players).map(([pa, pb]) => matchRowHTML(g, pa, pb));
 
-      const sched = formatScheduleHits(scheduleHitsForGroup(schedule, g.event, g.group));
+      const sched = formatScheduleHits(scheduleHitsForGroup(schedule, g.event, g.group), schedule);
 
       return `
         <div class="group-card">

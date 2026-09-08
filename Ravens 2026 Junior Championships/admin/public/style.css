@@ -644,3 +644,13 @@ button.link.danger {
   font-size: 11px;
   color: var(--color-muted, #666);
 }
+
+/* Schedule day separator, shown when a schedule covers more than one day. */
+.sched-day {
+  background: var(--color-header-bg, #111);
+  color: #fff;
+  text-align: left;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  padding: 8px 14px;
+}

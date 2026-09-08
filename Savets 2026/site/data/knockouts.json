@@ -54,43 +54,43 @@
     "round1Slots": [
       {
         "match": 1,
-        "p1": "",
-        "p2": ""
+        "p1": "entry:3047e181-7818-46f9-8c20-bc4b57fa6a15",
+        "p2": "bye"
       },
       {
         "match": 2,
-        "p1": "",
-        "p2": ""
+        "p1": "bye",
+        "p2": "entry:f02a1872-e6a3-4771-a326-c5fd75845469"
       },
       {
         "match": 3,
-        "p1": "",
-        "p2": ""
+        "p1": "entry:f441454a-6e2c-493b-8259-9fc2b41031cc",
+        "p2": "bye"
       },
       {
         "match": 4,
-        "p1": "",
-        "p2": ""
+        "p1": "bye",
+        "p2": "entry:a76c4fd6-bc9b-4e39-a5a5-8eb3fbda084f"
       },
       {
         "match": 5,
-        "p1": "",
-        "p2": ""
+        "p1": "entry:c6ce907a-3ec0-4d82-837c-59c6a25e08e9",
+        "p2": "bye"
       },
       {
         "match": 6,
-        "p1": "",
-        "p2": ""
+        "p1": "entry:5d74d21a-834d-4dab-98b5-d64a12cb05e1",
+        "p2": "entry:233f1f7b-7c7f-4c59-9d26-7e791dc191ae"
       },
       {
         "match": 7,
-        "p1": "",
-        "p2": ""
+        "p1": "entry:f27d8c39-bbd0-4c61-956a-80160b939481",
+        "p2": "bye"
       },
       {
         "match": 8,
-        "p1": "",
-        "p2": ""
+        "p1": "bye",
+        "p2": "entry:a20d4889-058a-4ec5-8ed7-1c9aa0b951e1"
       }
     ],
     "scores": {}

@@ -134,10 +134,15 @@ app.delete("/api/entries/:id", async (req, res, next) => {
 });
 
 // ---- Schedule ----
-// Reads a fixed local workbook (admin/Schedule.xlsx): row 1 (from column B onward) has table
+// Reads a fixed local workbook (admin/Schedule.xlsx). Each sheet is one day of play, named
+// as the day ("Day 1", "Day 2"); within a sheet, row 1 (from column B onward) has table
 // numbers, column A (from row 2) has the time for that row, and each cell is what's playing
 // at that time on that table. Column A's Excel time-only values come back as a 1899-12-30
 // placeholder date, so only the UTC hour/minute are used.
+//
+// Stored as { tables, days, rows } where every row carries the day it belongs to. A
+// workbook with a single sheet still imports; schedules saved before days existed have no
+// "day" on their rows and are treated as one unnamed day.
 
 function formatExcelTime(value) {
   const date = value instanceof Date ? value : new Date(value);
@@ -167,40 +172,72 @@ app.post("/api/schedule/import", async (req, res, next) => {
 
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.readFile(SCHEDULE_IMPORT_FILE);
-    const worksheet = workbook.worksheets[0];
-    if (!worksheet) return res.status(400).json({ error: "No worksheet found in Schedule.xlsx" });
-
-    const tableColumns = [];
-    worksheet.getRow(1).eachCell((cell, colNumber) => {
-      if (colNumber === 1) return;
-      const val = cellText(cell);
-      if (val) tableColumns.push({ col: colNumber, table: val });
-    });
-
-    if (tableColumns.length === 0) {
-      return res.status(400).json({ error: "No table columns found in the header row (row 1, from column B)" });
+    if (workbook.worksheets.length === 0) {
+      return res.status(400).json({ error: "No worksheet found in Schedule.xlsx" });
     }
 
     const rows = [];
-    for (let r = 2; r <= worksheet.rowCount; r++) {
-      const row = worksheet.getRow(r);
-      const timeCellValue = row.getCell(1).value;
-      if (timeCellValue === null || timeCellValue === undefined || timeCellValue === "") continue;
-      const time = formatExcelTime(timeCellValue);
+    const days = [];
+    const tables = [];
+    const warnings = [];
+    const perDay = {};
 
-      const cells = {};
-      tableColumns.forEach(({ col, table }) => {
-        const text = cellText(row.getCell(col));
-        if (text) cells[table] = text;
+    workbook.worksheets.forEach((worksheet) => {
+      const day = worksheet.name.trim();
+
+      const tableColumns = [];
+      worksheet.getRow(1).eachCell((cell, colNumber) => {
+        if (colNumber === 1) return;
+        const val = cellText(cell);
+        if (val) tableColumns.push({ col: colNumber, table: val });
       });
 
-      if (Object.keys(cells).length === 0) continue;
-      rows.push({ time, cells });
+      if (tableColumns.length === 0) {
+        warnings.push(`"${day}": no table columns in the header row (row 1, from column B) — skipped`);
+        return;
+      }
+
+      let dayRowCount = 0;
+      for (let r = 2; r <= worksheet.rowCount; r++) {
+        const row = worksheet.getRow(r);
+        const timeCellValue = row.getCell(1).value;
+        if (timeCellValue === null || timeCellValue === undefined || timeCellValue === "") continue;
+        const time = formatExcelTime(timeCellValue);
+
+        const cells = {};
+        tableColumns.forEach(({ col, table }) => {
+          const text = cellText(row.getCell(col));
+          if (text) cells[table] = text;
+        });
+
+        if (Object.keys(cells).length === 0) continue;
+        rows.push({ day, time, cells });
+        dayRowCount++;
+      }
+
+      if (dayRowCount === 0) {
+        warnings.push(`"${day}": no rows with a time and something scheduled — skipped`);
+        return;
+      }
+
+      days.push(day);
+      perDay[day] = dayRowCount;
+      // Tables are the union across days, in first-seen order, so a day that uses fewer
+      // tables still lines up with the rest of the grid.
+      tableColumns.forEach(({ table }) => {
+        if (!tables.includes(table)) tables.push(table);
+      });
+    });
+
+    if (days.length === 0) {
+      return res.status(400).json({
+        error: `Nothing could be imported from Schedule.xlsx. ${warnings.join(" ")}`.trim(),
+      });
     }
 
-    const schedule = { tables: tableColumns.map((t) => t.table), rows };
+    const schedule = { tables, days, rows };
     await writeJSON(SCHEDULE_FILE, schedule);
-    res.status(201).json({ imported: rows.length });
+    res.status(201).json({ imported: rows.length, days: days.map((d) => `${d} (${perDay[d]})`), warnings });
   } catch (err) {
     next(err);
   }

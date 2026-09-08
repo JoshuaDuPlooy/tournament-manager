@@ -24,6 +24,18 @@ const HEADER_FILL = "#1c2530";
 // Same palette/order as site/schedule.html's EVENT_COLORS.
 const EVENT_COLORS = ["#FFD6D6", "#FFE8C2", "#FFF6BF", "#DFFFD6", "#C2F0E8", "#C2E0FF", "#D9C2FF", "#FFC2E8"];
 
+// Each sheet of Schedule.xlsx is a day and every row records the day it belongs to.
+// Schedules built before days existed have neither, and count as one unnamed day.
+function scheduleDayList(schedule) {
+  if (Array.isArray(schedule.days) && schedule.days.length) return schedule.days;
+  const seen = [];
+  (schedule.rows || []).forEach((row) => {
+    const d = row.day || "";
+    if (!seen.includes(d)) seen.push(d);
+  });
+  return seen;
+}
+
 function eventColor(events, event) {
   const idx = events.indexOf(event);
   return EVENT_COLORS[(idx >= 0 ? idx : 0) % EVENT_COLORS.length];
@@ -56,6 +68,7 @@ async function main() {
   const events = tournament.events || [];
   const tables = schedule.tables || [];
   const rows = schedule.rows || [];
+  const days = scheduleDayList(schedule);
 
   fs.mkdirSync(OUTPUT_DIR, { recursive: true });
   const outPath = path.join(OUTPUT_DIR, "Schedule.pdf");
@@ -66,6 +79,11 @@ async function main() {
   const pageWidth = doc.page.width;
   const pageHeight = doc.page.height;
 
+  // One page per day of play.
+  days.forEach((day, dayIndex) => {
+  const rowsForDay = rows.filter((r) => (r.day || "") === day);
+  if (dayIndex > 0) doc.addPage();
+
   doc.fillColor("#1c2530").font("Helvetica-Bold").fontSize(18).text(tournament.name, MARGIN, MARGIN, {
     width: pageWidth - MARGIN * 2,
     align: "center",
@@ -74,7 +92,7 @@ async function main() {
     .font("Helvetica")
     .fontSize(11)
     .fillColor("#6b7684")
-    .text(`${tournament.startDate} — ${tournament.endDate} · ${tournament.venue}`, MARGIN, MARGIN + 24, {
+    .text(`${day ? day + " · " : ""}${tournament.startDate} — ${tournament.endDate} · ${tournament.venue}`, MARGIN, MARGIN + 24, {
       width: pageWidth - MARGIN * 2,
       align: "center",
     });
@@ -96,7 +114,7 @@ async function main() {
   const width = pageWidth - MARGIN * 2;
   const height = pageHeight - MARGIN - top;
   const colWidth = (width - TIME_COL_WIDTH) / tables.length;
-  const rowHeight = height / (rows.length + 1);
+  const rowHeight = height / (rowsForDay.length + 1);
 
   function colX(i) {
     // i === 0 is the Time column; i >= 1 are table columns.
@@ -115,7 +133,7 @@ async function main() {
   });
 
   // Data rows.
-  rows.forEach((row, r) => {
+  rowsForDay.forEach((row, r) => {
     const rowY = top + (r + 1) * rowHeight;
 
     doc.rect(colX(0), rowY, colW(0), rowHeight).fillAndStroke("#f5f7fa", BORDER_COLOR);
@@ -150,6 +168,7 @@ async function main() {
         .text(lines.join("\n"), cellX + 3, textY, { width: cellW - 6, align: "center", lineGap: 1 });
     });
   });
+  });
 
   doc.end();
   await new Promise((resolve, reject) => {
@@ -157,7 +176,8 @@ async function main() {
     stream.on("error", reject);
   });
 
-  console.log(`Built schedule PDF (${rows.length} time slot(s) x ${tables.length} table(s)) — ${outPath}`);
+  const dayLabel = days.length > 1 ? `${days.length} day(s), ` : "";
+  console.log(`Built schedule PDF (${dayLabel}${rows.length} time slot(s) x ${tables.length} table(s)) — ${outPath}`);
 }
 
 main().catch((err) => {

@@ -211,15 +211,6 @@
     "paid": false
   },
   {
-    "id": "d36a935b-8201-48a7-9d92-bb0e97892332",
-    "name": "Suzie Phillips",
-    "club": "Mother City",
-    "events": [
-      "Women's 50+"
-    ],
-    "paid": true
-  },
-  {
     "id": "da33ff45-d655-444f-b04e-964b2b54f7f4",
     "name": "Gareth Bunce",
     "club": "Mother City",
@@ -311,15 +302,6 @@
     "paid": false
   },
   {
-    "id": "16c4d963-95ce-4845-8adf-91531971546d",
-    "name": "Lindsay October & Angeline Wood",
-    "club": "TOP TTC & Ravens",
-    "events": [
-      "Mixed Doubles"
-    ],
-    "paid": false
-  },
-  {
     "id": "c6ce907a-3ec0-4d82-837c-59c6a25e08e9",
     "name": "Ashley Wesson & Terence Cable",
     "club": "Livken",
@@ -329,12 +311,12 @@
     "paid": false
   },
   {
-    "id": "3b83c5f9-1b9e-49c0-a024-8826dc75736c",
-    "name": "Ashley Wesson & ?",
-    "club": "Livken & ?",
+    "id": "8a87cac1-1396-49da-bc21-336581707ff7",
+    "name": "Amien Phillips",
+    "club": "Nexus",
     "events": [
-      "Mixed Doubles"
+      "Men's 40+"
     ],
-    "paid": false
+    "paid": true
   }
 ]

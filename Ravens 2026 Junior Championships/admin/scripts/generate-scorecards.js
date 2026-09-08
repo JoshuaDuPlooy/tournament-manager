@@ -43,7 +43,7 @@ function scheduleHitsForGroup(schedule, event, groupNumber) {
       if (!text.toLowerCase().startsWith(event.toLowerCase())) return;
       const rest = text.slice(event.length).trim().replace(/\s+/g, " ");
       if (new RegExp(`^Group\\s+${groupNumber}$`, "i").test(rest)) {
-        hits.push({ time: row.time, table });
+        hits.push({ day: row.day || "", time: row.time, table });
       }
     });
   });
@@ -69,7 +69,7 @@ function scheduleHitsForMatch(schedule, event, roundNumber, totalRoundsCount, ma
       const m = rest.match(/^(.*?)\s+Match\s+(\d+)$/i);
       if (!m || Number(m[2]) !== matchNumber) return;
       if (!scheduleRoundTokenMatches(m[1].trim(), roundNumber, totalRoundsCount)) return;
-      hits.push({ time: row.time, table });
+      hits.push({ day: row.day || "", time: row.time, table });
     });
   });
   return hits;

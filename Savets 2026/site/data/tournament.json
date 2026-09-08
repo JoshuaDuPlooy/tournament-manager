@@ -2,14 +2,10 @@
   "name": "SAVETTS 2026",
   "season": "2026",
   "events": [
-    "Women's 35+",
-    "Women's 50+",
     "Men's 40+",
     "Men's 50+",
     "Men's 60+",
-    "Ladies Doubles",
-    "Men's Doubles",
-    "Mixed Doubles"
+    "Men's Doubles"
   ],
   "startDate": "2026-09-11",
   "endDate": "2026-09-12",
@@ -25,7 +21,7 @@
     "Men's 50+": false,
     "Men's 60+": false,
     "Ladies Doubles": false,
-    "Men's Doubles": false,
+    "Men's Doubles": true,
     "Mixed Doubles": false
   },
   "pointsWin": 3,

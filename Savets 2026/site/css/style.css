@@ -664,3 +664,13 @@ tr:hover td {
     grid-template-columns: 1fr;
   }
 }
+
+/* Schedule day separator, shown when a schedule covers more than one day. */
+.schedule-table th.sched-day {
+  background: var(--color-header-bg);
+  color: #fff;
+  text-align: left;
+  font-size: 13px;
+  letter-spacing: 0.5px;
+  padding: 9px 10px;
+}
