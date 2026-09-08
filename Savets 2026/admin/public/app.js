@@ -2,7 +2,7 @@ const state = {
   tournament: null,
   entries: [],
   groups: [],
-  rankings: [],
+  rankings: { groups: [], knockouts: [] },
   knockouts: [],
   schedule: { tables: [], rows: [] },
 };
@@ -167,8 +167,9 @@ tournamentForm.addEventListener("submit", async (e) => {
   renderEntriesOverall();
   renderEntriesByEvent();
   renderGroups();
-  refreshRankings();
+  refreshRankings("groups");
   renderKnockoutsTab();
+  refreshRankings("knockouts");
   renderScheduleTab();
 });
 
@@ -450,7 +451,7 @@ function renderGroupEventTabs() {
       btn.classList.add("active");
       selectedGroupsEvent = btn.dataset.event;
       renderGroups();
-      refreshRankings();
+      refreshRankings("groups");
     });
   });
 }
@@ -808,41 +809,60 @@ function splitDoublesPartners(name) {
     .filter(Boolean);
 }
 
-async function refreshRankings() {
-  const statusEl = document.getElementById("rankings-status");
-  if (!selectedGroupsEvent) {
-    state.rankings = [];
-    renderEventRankings();
+// The same rankings list appears under both the Groups and the Knockouts tab. Each
+// follows its own tab's selected event and keeps its own copy of the fetched list, so
+// changing event on one tab does not disturb the other.
+const RANKING_PANELS = {
+  groups: {
+    selectedEvent: () => selectedGroupsEvent,
+    ids: { status: "rankings-status", table: "rankings-table", tbody: "rankings-tbody", empty: "rankings-empty" },
+  },
+  knockouts: {
+    selectedEvent: () => selectedKnockoutsEvent,
+    ids: { status: "ko-rankings-status", table: "ko-rankings-table", tbody: "ko-rankings-tbody", empty: "ko-rankings-empty" },
+  },
+};
+
+async function refreshRankings(panelKey = "groups") {
+  const panel = RANKING_PANELS[panelKey];
+  const statusEl = document.getElementById(panel.ids.status);
+  const event = panel.selectedEvent();
+  if (!event) {
+    state.rankings[panelKey] = [];
+    renderEventRankings(panelKey);
     return;
   }
   try {
-    const res = await fetch(`/api/rankings?event=${encodeURIComponent(selectedGroupsEvent)}`);
+    const res = await fetch(`/api/rankings?event=${encodeURIComponent(event)}`);
     const body = await res.json();
     if (!res.ok) throw new Error(body.error || "Failed to load rankings");
-    state.rankings = body;
-    statusEl.textContent = isDoublesEvent(selectedGroupsEvent)
+    state.rankings[panelKey] = body;
+    statusEl.textContent = isDoublesEvent(event)
       ? "Doubles event — each partner is looked up across every ranking category."
       : "";
   } catch (err) {
-    state.rankings = [];
+    state.rankings[panelKey] = [];
     statusEl.textContent = err.message;
   }
-  renderEventRankings();
+  renderEventRankings(panelKey);
 }
 
-function renderEventRankings() {
-  const doubles = isDoublesEvent(selectedGroupsEvent);
-  const entriesForEvent = state.entries.filter((e) => (e.events || []).includes(selectedGroupsEvent));
+function renderEventRankings(panelKey = "groups") {
+  const panel = RANKING_PANELS[panelKey];
+  const selectedEvent = panel.selectedEvent();
+  const rankings = state.rankings[panelKey] || [];
+  const doubles = isDoublesEvent(selectedEvent);
+  const entriesForEvent = state.entries.filter((e) => (e.events || []).includes(selectedEvent));
 
   const withRanks = entriesForEvent
     .map((e) => {
       if (!doubles) {
-        const match = findNationalRanking(e.name, state.rankings);
+        const match = findNationalRanking(e.name, rankings);
         return { ...e, partners: null, bestRank: match ? match.rank : null };
       }
       const partners = splitDoublesPartners(e.name).map((partner) => ({
         name: partner,
-        match: findNationalRanking(partner, state.rankings),
+        match: findNationalRanking(partner, rankings),
       }));
       const ranked = partners.filter((p) => p.match).map((p) => p.match.rank);
       return { ...e, partners, bestRank: ranked.length ? Math.min(...ranked) : null };
@@ -854,7 +874,7 @@ function renderEventRankings() {
       return a.bestRank - b.bestRank;
     });
 
-  const tbody = document.getElementById("rankings-tbody");
+  const tbody = document.getElementById(panel.ids.tbody);
   tbody.innerHTML = withRanks
     .map((e) => {
       const rankCell = e.partners
@@ -877,8 +897,8 @@ function renderEventRankings() {
     })
     .join("");
 
-  document.getElementById("rankings-table").hidden = withRanks.length === 0;
-  document.getElementById("rankings-empty").hidden = withRanks.length > 0;
+  document.getElementById(panel.ids.table).hidden = withRanks.length === 0;
+  document.getElementById(panel.ids.empty).hidden = withRanks.length > 0;
 }
 
 // ---- Knockouts ----
@@ -905,6 +925,7 @@ function renderKnockoutsEventTabs() {
       btn.classList.add("active");
       selectedKnockoutsEvent = btn.dataset.event;
       renderKnockoutsTab();
+      refreshRankings("knockouts");
     });
   });
 }
@@ -1383,9 +1404,10 @@ async function loadAll() {
   renderEntriesOverall();
   renderEntriesByEvent();
   renderGroups();
-  refreshRankings();
+  refreshRankings("groups");
   renderScheduleTab();
   renderKnockoutsTab();
+  refreshRankings("knockouts");
 }
 
 loadAll().catch((err) => {
