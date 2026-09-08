@@ -763,21 +763,35 @@ function nameMatchScore(entryName, rankingName) {
 
 const RANKING_MATCH_THRESHOLD = 0.75;
 
-// Returns the best matching ranking row for a name, or null. Ties on match quality are
-// broken by the better (lower) rank, which matters for doubles: those searches span every
-// category at once, so the same player can appear in more than one.
+// The age band a ranking category covers, e.g. "MEN 40+" -> 40. Categories without one
+// sort last.
+function categoryAge(category) {
+  const m = String(category || "").match(/(\d+)\s*\+/);
+  return m ? Number(m[1]) : Number.POSITIVE_INFINITY;
+}
+
+// Returns the ranking row to show for a name, or null.
+//
+// A doubles lookup spans every category at once, and a player can be ranked in several
+// of them -- someone in their fifties may hold both a 40+ and a 50+ ranking. The
+// youngest band wins: their 40+ ranking if they have one, otherwise 50+, and so on.
+// Only then do match quality and rank break ties. Singles lookups return a single
+// category, so this ordering does not affect them.
 function findNationalRanking(entryName, rankings) {
   if (!rankings || rankings.length === 0) return null;
-  let best = null;
-  let bestScore = 0;
+  const candidates = [];
   rankings.forEach((r) => {
     const score = nameMatchScore(entryName, r.name);
-    if (score > bestScore || (score === bestScore && best && r.rank < best.rank)) {
-      bestScore = score;
-      best = r;
-    }
+    if (score >= RANKING_MATCH_THRESHOLD) candidates.push({ ...r, score });
   });
-  return bestScore >= RANKING_MATCH_THRESHOLD ? best : null;
+  if (candidates.length === 0) return null;
+  candidates.sort((a, b) => {
+    const byAge = categoryAge(a.category) - categoryAge(b.category);
+    if (byAge) return byAge;
+    if (b.score !== a.score) return b.score - a.score;
+    return a.rank - b.rank;
+  });
+  return candidates[0];
 }
 
 function isDoublesEvent(event) {
