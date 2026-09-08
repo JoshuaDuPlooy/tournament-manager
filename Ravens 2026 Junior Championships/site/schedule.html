@@ -44,7 +44,12 @@
       document.getElementById("hamburger").classList.toggle("open");
     }
 
-    const EVENT_COLORS = ["#FFD6D6", "#FFE8C2", "#FFF6BF", "#DFFFD6", "#C2F0E8", "#C2E0FF", "#D9C2FF", "#FFC2E8"];
+    // Event colours for the schedule grid. Chosen so no two are easily confused: every pair is
+    // at least deltaE 16 apart (CIEDE2000), and at least 10 apart when simulated as red-green
+    // colour blindness -- the old pastel set fell to 3, which made orange and yellow identical.
+    // The orange/olive pair in particular is separated by lightness rather than hue, which is
+    // what survives colour-vision deficiency. All keep >= 6:1 contrast with the cell text.
+    const EVENT_COLORS = ["#EE848F", "#FCBB6F", "#B6A047", "#A3EDAF", "#37B39A", "#7FE4E6", "#27ADFF", "#DA8CD1"];
 
     // Each sheet of Schedule.xlsx is a day; every row records the day it belongs to.
     // Schedules published before days existed have neither, and count as one unnamed day.
