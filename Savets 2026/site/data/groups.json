@@ -1,32 +1,14 @@
 [
   {
-    "id": "0c027e4f-0cb4-4ddb-9480-00ac55162893",
-    "event": "Men's 60+",
-    "group": "1",
-    "seed": "Simon Dimant",
-    "seedClub": "Rivonia",
-    "name2": "Jose da Silva",
-    "club2": "CSIR",
-    "name3": "Andre Taljaard",
-    "club3": "GWTTC",
-    "name4": "Sedick Abrahams",
-    "club4": "Stephaniens",
-    "day": "",
-    "date": "",
-    "time": "",
-    "table": "",
-    "matches": {}
-  },
-  {
-    "id": "0b286507-1c14-4763-b2c0-df4ab6b7adce",
+    "id": "b0cda80f-d6bf-48f2-bd27-ae878214a9a4",
     "event": "Men's 40+",
     "group": "1",
     "seed": "Bernard Stewe",
     "seedClub": "GWTTC",
     "name2": "Quentin Thomas",
     "club2": "TOP TTC",
-    "name3": "Frans Erasmus",
-    "club3": "Ravens",
+    "name3": "Thabiet Adams",
+    "club3": "Bishop Lavis",
     "name4": "",
     "club4": "",
     "day": "",
@@ -36,7 +18,7 @@
     "matches": {}
   },
   {
-    "id": "d4332912-b0c9-4aba-93d9-40bd7bd8c400",
+    "id": "8cbb5815-2d6b-4822-869a-80e6842b5bc6",
     "event": "Men's 40+",
     "group": "2",
     "seed": "David Nwafor",
@@ -54,7 +36,7 @@
     "matches": {}
   },
   {
-    "id": "ac21c644-4ccf-4f44-aa9f-d69639894754",
+    "id": "69797ce1-610f-4490-81a5-44341ae6dd01",
     "event": "Men's 40+",
     "group": "3",
     "seed": "Ashley Wesson",
@@ -72,7 +54,7 @@
     "matches": {}
   },
   {
-    "id": "10cd71de-ddf4-4d5c-af86-dc117628ee41",
+    "id": "c71f7c28-6873-4f4e-99d4-f53203729e59",
     "event": "Men's 40+",
     "group": "4",
     "seed": "Chris Sloster",
@@ -90,7 +72,7 @@
     "matches": {}
   },
   {
-    "id": "a3cb4ea0-9d5a-46ed-a80c-17d31df2f726",
+    "id": "176c107a-9184-4dac-81dc-1319cf438c9e",
     "event": "Men's 40+",
     "group": "5",
     "seed": "Lorenzo Haupt",
@@ -99,8 +81,8 @@
     "club2": "Nexus",
     "name3": "Pedro Fortuin",
     "club3": "GWTTC",
-    "name4": "Thabiet Adams",
-    "club4": "Bishop Lavis",
+    "name4": "",
+    "club4": "",
     "day": "",
     "date": "",
     "time": "",
@@ -108,17 +90,17 @@
     "matches": {}
   },
   {
-    "id": "81e3d379-2de4-4307-80c5-45cfd666537a",
+    "id": "0a3fa313-ff10-4092-8055-a55eb8efc4a1",
     "event": "Men's 40+",
     "group": "6",
     "seed": "Gaston Koetaan",
     "seedClub": "TOP TTC",
-    "name2": "Demos Dracoulides",
-    "club2": "Ravens",
-    "name3": "Benjamin van der Ross",
-    "club3": "Livken",
-    "name4": "Amien Phillips",
-    "club4": "Nexus",
+    "name2": "Benjamin van der Ross",
+    "club2": "Livken",
+    "name3": "Amien Phillips",
+    "club3": "Nexus",
+    "name4": "",
+    "club4": "",
     "day": "",
     "date": "",
     "time": "",
@@ -126,7 +108,7 @@
     "matches": {}
   },
   {
-    "id": "d94308cd-70c9-499d-a27c-91db6861faa3",
+    "id": "7a3f7fef-e01e-437b-bcdf-7ae1226419e8",
     "event": "Men's 50+",
     "group": "1",
     "seed": "Ashley Wesson",
@@ -144,7 +126,7 @@
     "matches": {}
   },
   {
-    "id": "f9ca0d30-e522-4c4c-9053-bc33d8cd13f9",
+    "id": "fe7af1d1-4c13-476d-b465-2222cf307264",
     "event": "Men's 50+",
     "group": "2",
     "seed": "Lorenzo Haupt",
@@ -162,7 +144,7 @@
     "matches": {}
   },
   {
-    "id": "2a330e2f-db6d-41b5-b3b8-60c53d3be41b",
+    "id": "cea8f92d-099b-4fc0-bac9-66b47dc635f6",
     "event": "Men's 50+",
     "group": "3",
     "seed": "Muaath Adams",
@@ -180,7 +162,7 @@
     "matches": {}
   },
   {
-    "id": "3d4a17cb-d8a4-4083-a0d7-ac8a5f20cfac",
+    "id": "c735c8f3-6041-490e-a809-1f99a5588f23",
     "event": "Men's 50+",
     "group": "4",
     "seed": "Chris Sloster",
@@ -198,7 +180,7 @@
     "matches": {}
   },
   {
-    "id": "40adf1ca-a53c-4060-87ad-35400722a61e",
+    "id": "2f7fec62-f037-4437-bf02-35e7ffebb635",
     "event": "Men's 50+",
     "group": "5",
     "seed": "Frans Erasmus",
@@ -209,6 +191,42 @@
     "club3": "GWTTC",
     "name4": "Benjamin van der Ross",
     "club4": "Livken",
+    "day": "",
+    "date": "",
+    "time": "",
+    "table": "",
+    "matches": {}
+  },
+  {
+    "id": "24d80504-1599-48c7-a59a-126d2df74182",
+    "event": "Men's 60+",
+    "group": "1",
+    "seed": "Frans Erasmus",
+    "seedClub": "Ravens",
+    "name2": "Simon Dimant",
+    "club2": "Rivonia",
+    "name3": "Sedick Abrahams",
+    "club3": "Stephaniens",
+    "name4": "",
+    "club4": "",
+    "day": "",
+    "date": "",
+    "time": "",
+    "table": "",
+    "matches": {}
+  },
+  {
+    "id": "c86cd4f8-06c5-4ef7-acda-e3ab46f3c5c5",
+    "event": "Men's 60+",
+    "group": "2",
+    "seed": "Demos Dracoulides",
+    "seedClub": "Ravens",
+    "name2": "Jose da Silva",
+    "club2": "CSIR",
+    "name3": "Andre Taljaard",
+    "club3": "GWTTC",
+    "name4": "",
+    "club4": "",
     "day": "",
     "date": "",
     "time": "",

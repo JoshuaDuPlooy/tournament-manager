@@ -58,7 +58,7 @@
     },
     {
       "day": "Day 2",
-      "time": "10:00",
+      "time": "09:30",
       "cells": {
         "1": "Men's 50+ Group 1",
         "2": "Men's 50+ Group 2",
@@ -69,13 +69,26 @@
     },
     {
       "day": "Day 2",
-      "time": "11:30",
+      "time": "11:00",
       "cells": {
         "1": "Men's 40+ Round 16 Match 1",
         "2": "Men's 40+ Round 16 Match 2",
         "3": "Men's 40+ Round 16 Match 3",
         "4": "Men's 40+ Round 16 Match 4",
-        "5": "Men's 60+ Group 1"
+        "5": "Men's 60+ Group 1",
+        "6": "Men's 60+ Group 2"
+      }
+    },
+    {
+      "day": "Day 2",
+      "time": "11:30",
+      "cells": {
+        "1": "Men's 40+ Quater Match 1",
+        "2": "Men's 40+ Quater Match 2",
+        "3": "Men's 40+ Quater Match 3",
+        "4": "Men's 40+ Quater Match 4",
+        "5": "Men's 60+ Group 1",
+        "6": "Men's 60+ Group 2"
       }
     },
     {
@@ -83,43 +96,32 @@
       "time": "12:00",
       "cells": {
         "1": "Men's 50+ Round 16 Match 1",
-        "2": "Men's 50+ Round 16 Match 2",
-        "5": "Men's 60+ Group 1"
+        "2": "Men's 50+ Round 16 Match 2"
       }
     },
     {
       "day": "Day 2",
       "time": "12:30",
       "cells": {
-        "1": "Men's 40+ Quater Match 1",
-        "2": "Men's 40+ Quater Match 2",
-        "3": "Men's 40+ Quater Match 3",
-        "4": "Men's 40+ Quater Match 4",
-        "5": "Men's 60+ Group 1"
+        "1": "Men's 50+ Quater Match 1",
+        "2": "Men's 50+ Quater Match 2",
+        "3": "Men's 50+ Quater Match 3",
+        "4": "Men's 50+ Quater Match 4"
       }
     },
     {
       "day": "Day 2",
       "time": "13:00",
       "cells": {
-        "1": "Men's 50+ Quater Match 1",
-        "2": "Men's 50+ Quater Match 2",
-        "3": "Men's 50+ Quater Match 3",
-        "4": "Men's 50+ Quater Match 4",
-        "5": "Men's 60+ Group 1"
+        "1": "Men's 40+ Semi Match 1",
+        "2": "Men's 40+ Semi Match 2",
+        "3": "Men's 60+ Semi Match 1",
+        "4": "Men's 60+ Semi Match 2"
       }
     },
     {
       "day": "Day 2",
       "time": "13:30",
-      "cells": {
-        "1": "Men's 40+ Semi Match 1",
-        "2": "Men's 40+ Semi Match 2"
-      }
-    },
-    {
-      "day": "Day 2",
-      "time": "14:00",
       "cells": {
         "1": "Men's 50+ Semi Match 1",
         "2": "Men's 50+ Semi Match 2"
@@ -127,14 +129,15 @@
     },
     {
       "day": "Day 2",
-      "time": "14:30",
+      "time": "14:00",
       "cells": {
-        "1": "Men's 40+ Final"
+        "1": "Men's 40+ Final",
+        "2": "Men's 60+ Final"
       }
     },
     {
       "day": "Day 2",
-      "time": "15:00",
+      "time": "14:30",
       "cells": {
         "1": "Men's 50+ Final"
       }
