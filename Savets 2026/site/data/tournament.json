@@ -12,8 +12,8 @@
   "venue": "Ravensmead Multipurpose Centre, 189 Christians St, Ravensmead, 7504",
   "entryFee": 120,
   "entriesVisible": true,
-  "groupsVisible": true,
-  "scheduleVisible": true,
+  "groupsVisible": false,
+  "scheduleVisible": false,
   "knockoutsVisible": {
     "Women's 35+": false,
     "Women's 50+": false,
