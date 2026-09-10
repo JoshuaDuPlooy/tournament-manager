@@ -53,6 +53,26 @@ function matchEventForText(events, text) {
 
 // Groups render as "Event / Group N" (2 lines); knockout matches as "Event / Round / Match N"
 // (3 lines) — same rules as formatScheduleCell in site/schedule.html.
+// Cell text is sized to fill its block rather than sitting at a fixed size: a page with
+// few rows gets large type, a dense page smaller, and either way the block is used. The
+// binding constraint is usually the longest line's width, not the height.
+const CELL_PAD_X = 4;
+const CELL_PAD_Y = 4;
+const CELL_FONT_MIN = 8;
+const CELL_FONT_MAX = 26;
+const CELL_LINE_GAP_RATIO = 0.12;
+
+function fitFontSize(doc, lines, maxWidth, maxHeight, minSize, maxSize) {
+  for (let size = maxSize; size > minSize; size -= 0.5) {
+    doc.fontSize(size);
+    const lineHeight = doc.currentLineHeight() + size * CELL_LINE_GAP_RATIO;
+    if (lines.length * lineHeight > maxHeight) continue;
+    if (Math.max(...lines.map((l) => doc.widthOfString(l))) > maxWidth) continue;
+    return size;
+  }
+  return minSize;
+}
+
 function formatScheduleCellLines(text, event) {
   if (!event) return [text];
   const rest = text.slice(event.length).trim().replace(/\s+/g, " ");
@@ -131,10 +151,50 @@ async function main() {
 
   // Header row.
   doc.rect(left, top, width, rowHeight).fill(HEADER_FILL);
-  doc.fillColor("#ffffff").font("Helvetica-Bold").fontSize(11);
-  doc.text("Time", colX(0), top + rowHeight / 2 - 5, { width: colW(0), align: "center" });
+  doc.fillColor("#ffffff").font("Helvetica-Bold");
+  // Scaled with the rest of the grid, otherwise the column headings look undersized
+  // beside the enlarged cell text.
+  // The headings sit side by side, so this is a single line whose width is set by the
+  // widest label — not one line per column.
+  doc.fontSize(12);
+  const widestHeading = ["Time", ...tables].reduce((a, b) =>
+    doc.widthOfString(b) > doc.widthOfString(a) ? b : a
+  );
+  const headerSize = fitFontSize(
+    doc,
+    [widestHeading],
+    Math.min(colW(0), colWidth) - CELL_PAD_X * 2,
+    rowHeight - CELL_PAD_Y * 2,
+    11,
+    22
+  );
+  doc.fontSize(headerSize);
+  const headerY = top + rowHeight / 2 - doc.currentLineHeight() / 2;
+  doc.text("Time", colX(0), headerY, { width: colW(0), align: "center" });
   tables.forEach((t, i) => {
-    doc.text(t, colX(i + 1), top + rowHeight / 2 - 5, { width: colW(i + 1), align: "center" });
+    doc.text(t, colX(i + 1), headerY, { width: colW(i + 1), align: "center" });
+  });
+
+  // Every cell on the page uses one size — the largest at which the busiest block still
+  // fits. Sizing each block independently would leave neighbouring cells at visibly
+  // different sizes, which reads badly across a grid.
+  doc.font("Helvetica-Bold");
+  let pageCellFontSize = CELL_FONT_MAX;
+  rowsForDay.forEach((row) => {
+    tables.forEach((t) => {
+      const text = row.cells[t];
+      if (!text) return;
+      const lines = formatScheduleCellLines(text, matchEventForText(events, text));
+      const fitted = fitFontSize(
+        doc,
+        lines,
+        colWidth - CELL_PAD_X * 2,
+        rowHeight - CELL_PAD_Y * 2,
+        CELL_FONT_MIN,
+        CELL_FONT_MAX
+      );
+      if (fitted < pageCellFontSize) pageCellFontSize = fitted;
+    });
   });
 
   // Data rows.
@@ -142,11 +202,15 @@ async function main() {
     const rowY = top + (r + 1) * rowHeight;
 
     doc.rect(colX(0), rowY, colW(0), rowHeight).fillAndStroke("#f5f7fa", BORDER_COLOR);
+    // The time would look tiny beside newly enlarged cells, so it scales with the row too.
+    doc.fillColor("#1c2530").font("Helvetica-Bold");
+    const timeSize = fitFontSize(doc, [row.time], colW(0) - CELL_PAD_X * 2, rowHeight - CELL_PAD_Y * 2, 9, 20);
     doc
-      .fillColor("#1c2530")
-      .font("Helvetica-Bold")
-      .fontSize(10)
-      .text(row.time, colX(0), rowY + rowHeight / 2 - 5, { width: colW(0), align: "center" });
+      .fontSize(timeSize)
+      .text(row.time, colX(0), rowY + rowHeight / 2 - doc.currentLineHeight() / 2, {
+        width: colW(0),
+        align: "center",
+      });
 
     tables.forEach((t, i) => {
       const cellX = colX(i + 1);
@@ -163,14 +227,17 @@ async function main() {
       doc.rect(cellX, rowY, cellW, rowHeight).fillAndStroke(color, BORDER_COLOR);
 
       const lines = formatScheduleCellLines(text, ev);
-      const lineHeight = 11;
-      const textBlockHeight = lines.length * lineHeight;
-      const textY = rowY + rowHeight / 2 - textBlockHeight / 2;
+      const size = pageCellFontSize;
+      doc.font("Helvetica-Bold").fontSize(size);
+      const lineGap = size * CELL_LINE_GAP_RATIO;
+      const blockHeight = lines.length * (doc.currentLineHeight() + lineGap) - lineGap;
       doc
         .fillColor("#1c2530")
-        .font("Helvetica-Bold")
-        .fontSize(9)
-        .text(lines.join("\n"), cellX + 3, textY, { width: cellW - 6, align: "center", lineGap: 1 });
+        .text(lines.join("\n"), cellX + CELL_PAD_X, rowY + rowHeight / 2 - blockHeight / 2, {
+          width: cellW - CELL_PAD_X * 2,
+          align: "center",
+          lineGap,
+        });
     });
   });
   });
