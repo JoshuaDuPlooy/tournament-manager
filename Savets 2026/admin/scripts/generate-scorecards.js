@@ -330,7 +330,10 @@ function buildKnockoutEntries(knockouts, schedule, entriesById) {
   return entries;
 }
 
-function fillGroupSheet(sheet, g, entry) {
+function fillGroupSheet(sheet, g, entry, tournamentName) {
+  // The template carries whichever tournament it was last drawn for; the name comes from
+  // the tournament being printed.
+  sheet.getCell("A2").value = tournamentName;
   sheet.getCell("B1").value = g.group;
   sheet.getCell("H1").value = entry.time || "";
   sheet.getCell("J1").value = entry.table || "";
@@ -346,32 +349,47 @@ function fillGroupSheet(sheet, g, entry) {
   sheet.getCell("F7").value = g.club4 || "";
 }
 
-function fillKnockoutSheet(sheet, entry) {
+function fillKnockoutSheet(sheet, entry, tournamentName) {
+  sheet.getCell("A2").value = tournamentName;
   sheet.getCell("B1").value = entry.round;
   sheet.getCell("E1").value = entry.match;
   sheet.getCell("H1").value = entry.time || "";
   sheet.getCell("J1").value = entry.table || "";
   sheet.getCell("I2").value = entry.event;
-  // Filled only where the draw already knows who is playing: a first round drawn
-  // directly from entries. Anything fed by a group or an earlier round stays blank.
-  sheet.getCell("B5").value = entry.playerA || "";
-  sheet.getCell("B6").value = entry.playerB || "";
+  // Filled only where the draw already knows who is playing. Anything still undecided
+  // stays blank.
+  //
+  // B..D is the name column (E onward are the game scores). A doubles pair is two full
+  // names and would otherwise spill across the score boxes, so the name area is merged
+  // and wrapped -- the row is tall enough for two lines.
+  ["B5", "B6"].forEach((addr, i) => {
+    const row = addr.slice(1);
+    try {
+      sheet.mergeCells(`B${row}:D${row}`);
+    } catch {
+      // already merged by the template — fine
+    }
+    const cell = sheet.getCell(addr);
+    cell.value = (i === 0 ? entry.playerA : entry.playerB) || "";
+    cell.alignment = { ...(cell.alignment || {}), wrapText: true, vertical: "middle" };
+  });
 }
 
 // ---- main ----
 
-async function generateGroupScorecards(groups, schedule, groupTemplateSheet) {
+async function generateGroupScorecards(groups, schedule, groupTemplateSheet, tournamentName) {
   const entries = buildGroupEntries(groups, schedule).sort(compareEntries);
   const outputWb = new ExcelJS.Workbook();
 
   entries.forEach((entry) => {
     const g = entry.group;
     const sheet = cloneSheet(outputWb, groupTemplateSheet, uniqueSheetName(outputWb, `${g.event} G${g.group}`));
-    fillGroupSheet(sheet, g, entry);
+    fillGroupSheet(sheet, g, entry, tournamentName);
   });
 
   for (let i = 1; i <= BLANK_GROUP_CARDS; i++) {
-    cloneSheet(outputWb, groupTemplateSheet, uniqueSheetName(outputWb, `Blank Group ${i}`));
+    const sheet = cloneSheet(outputWb, groupTemplateSheet, uniqueSheetName(outputWb, `Blank Group ${i}`));
+    sheet.getCell("A2").value = tournamentName;
   }
 
   const xlsxPath = path.join(OUTPUT_DIR, "Group Scorecards.xlsx");
@@ -381,7 +399,7 @@ async function generateGroupScorecards(groups, schedule, groupTemplateSheet) {
   convertToPdf(xlsxPath, pdfPath);
 }
 
-async function generateKnockoutScorecards(knockouts, schedule, knockoutTemplateSheet, entriesById) {
+async function generateKnockoutScorecards(knockouts, schedule, knockoutTemplateSheet, entriesById, tournamentName) {
   const entries = buildKnockoutEntries(knockouts, schedule, entriesById).sort(compareEntries);
   const outputWb = new ExcelJS.Workbook();
 
@@ -391,11 +409,12 @@ async function generateKnockoutScorecards(knockouts, schedule, knockoutTemplateS
       knockoutTemplateSheet,
       uniqueSheetName(outputWb, `${entry.event} ${entry.round} M${entry.match}`)
     );
-    fillKnockoutSheet(sheet, entry);
+    fillKnockoutSheet(sheet, entry, tournamentName);
   });
 
   for (let i = 1; i <= BLANK_KNOCKOUT_CARDS; i++) {
-    cloneSheet(outputWb, knockoutTemplateSheet, uniqueSheetName(outputWb, `Blank Knockout ${i}`));
+    const sheet = cloneSheet(outputWb, knockoutTemplateSheet, uniqueSheetName(outputWb, `Blank Knockout ${i}`));
+    sheet.getCell("A2").value = tournamentName;
   }
 
   const xlsxPath = path.join(OUTPUT_DIR, "Knockout Scorecards.xlsx");
@@ -406,6 +425,7 @@ async function generateKnockoutScorecards(knockouts, schedule, knockoutTemplateS
 }
 
 async function main() {
+  const tournament = JSON.parse(fs.readFileSync(path.join(DATA_DIR, "tournament.json"), "utf-8"));
   const groups = JSON.parse(fs.readFileSync(path.join(DATA_DIR, "groups.json"), "utf-8"));
   const knockouts = JSON.parse(fs.readFileSync(path.join(DATA_DIR, "knockouts.json"), "utf-8"));
   const schedule = JSON.parse(fs.readFileSync(path.join(DATA_DIR, "schedule.json"), "utf-8"));
@@ -422,8 +442,8 @@ async function main() {
   await knockoutTemplateWb.xlsx.readFile(KNOCKOUT_TEMPLATE);
   const knockoutTemplateSheet = knockoutTemplateWb.worksheets[0];
 
-  await generateGroupScorecards(groups, schedule, groupTemplateSheet);
-  await generateKnockoutScorecards(knockouts, schedule, knockoutTemplateSheet, entriesById);
+  await generateGroupScorecards(groups, schedule, groupTemplateSheet, tournament.name);
+  await generateKnockoutScorecards(knockouts, schedule, knockoutTemplateSheet, entriesById, tournament.name);
 
   console.log("Done. See admin/output/");
 }

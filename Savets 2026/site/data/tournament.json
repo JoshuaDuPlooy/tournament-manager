@@ -15,14 +15,10 @@
   "groupsVisible": true,
   "scheduleVisible": true,
   "knockoutsVisible": {
-    "Women's 35+": false,
-    "Women's 50+": false,
     "Men's 40+": false,
     "Men's 50+": false,
     "Men's 60+": false,
-    "Ladies Doubles": false,
-    "Men's Doubles": true,
-    "Mixed Doubles": false
+    "Men's Doubles": true
   },
   "pointsWin": 3,
   "pointsDraw": 1,
