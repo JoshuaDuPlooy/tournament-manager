@@ -214,7 +214,16 @@ function buildGroupEntries(groups, schedule) {
   return entries;
 }
 
-function buildKnockoutEntries(knockouts, schedule) {
+// Round-1 names are only known up front for slots that name a competitor directly
+// ("entry:<id>"), which is how events with no group stage are drawn. A group placing
+// like "1W" stays blank on the card, to be written in once that group finishes.
+function slotName(raw, entriesById) {
+  if (!raw || raw === "bye" || !raw.startsWith("entry:")) return "";
+  const entry = entriesById.get(raw.slice("entry:".length));
+  return entry ? entry.name : "";
+}
+
+function buildKnockoutEntries(knockouts, schedule, entriesById) {
   const entries = [];
   let sortKey = 0;
 
@@ -236,6 +245,8 @@ function buildKnockoutEntries(knockouts, schedule) {
         match: matchNumber,
         time: hit ? hit.time : null,
         table: hit ? hit.table : null,
+        playerA: slotName(slot.p1, entriesById),
+        playerB: slotName(slot.p2, entriesById),
         sortKey: sortKey++,
       });
     });
@@ -282,7 +293,10 @@ function fillKnockoutSheet(sheet, entry) {
   sheet.getCell("H1").value = entry.time || "";
   sheet.getCell("J1").value = entry.table || "";
   sheet.getCell("I2").value = entry.event;
-  // Names intentionally left blank.
+  // Filled only where the draw already knows who is playing: a first round drawn
+  // directly from entries. Anything fed by a group or an earlier round stays blank.
+  sheet.getCell("B5").value = entry.playerA || "";
+  sheet.getCell("B6").value = entry.playerB || "";
 }
 
 // ---- main ----
@@ -308,8 +322,8 @@ async function generateGroupScorecards(groups, schedule, groupTemplateSheet) {
   convertToPdf(xlsxPath, pdfPath);
 }
 
-async function generateKnockoutScorecards(knockouts, schedule, knockoutTemplateSheet) {
-  const entries = buildKnockoutEntries(knockouts, schedule).sort(compareEntries);
+async function generateKnockoutScorecards(knockouts, schedule, knockoutTemplateSheet, entriesById) {
+  const entries = buildKnockoutEntries(knockouts, schedule, entriesById).sort(compareEntries);
   const outputWb = new ExcelJS.Workbook();
 
   entries.forEach((entry) => {
@@ -336,6 +350,8 @@ async function main() {
   const groups = JSON.parse(fs.readFileSync(path.join(DATA_DIR, "groups.json"), "utf-8"));
   const knockouts = JSON.parse(fs.readFileSync(path.join(DATA_DIR, "knockouts.json"), "utf-8"));
   const schedule = JSON.parse(fs.readFileSync(path.join(DATA_DIR, "schedule.json"), "utf-8"));
+  const playerEntries = JSON.parse(fs.readFileSync(path.join(DATA_DIR, "entries.json"), "utf-8"));
+  const entriesById = new Map(playerEntries.map((e) => [e.id, e]));
 
   fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 
@@ -348,7 +364,7 @@ async function main() {
   const knockoutTemplateSheet = knockoutTemplateWb.worksheets[0];
 
   await generateGroupScorecards(groups, schedule, groupTemplateSheet);
-  await generateKnockoutScorecards(knockouts, schedule, knockoutTemplateSheet);
+  await generateKnockoutScorecards(knockouts, schedule, knockoutTemplateSheet, entriesById);
 
   console.log("Done. See admin/output/");
 }

@@ -51,9 +51,35 @@ function knockoutRoundLabel(roundNumber, totalRoundsCount) {
   return `Round of ${Math.pow(2, fromEnd + 1)}`;
 }
 
-function slotCodeLabel(raw) {
+// A round-1 slot is "", "bye", "entry:<id>" (a competitor named directly, for events
+// drawn straight into a knockout with no group stage) or a group placing like "1W".
+// Group placings are printed as-is because the name is not known until that group
+// finishes; a direct pick prints the competitor's name.
+function slotCodeLabel(raw, entriesById) {
   if (!raw) return "";
-  return raw.toLowerCase() === "bye" ? "BYE" : raw.toUpperCase();
+  if (raw.toLowerCase() === "bye") return "BYE";
+  if (raw.startsWith("entry:")) {
+    const entry = entriesById.get(raw.slice("entry:".length));
+    return entry ? entry.name : "";
+  }
+  return raw.toUpperCase();
+}
+
+// A group placing ("1W") is short, but a doubles pair is two full names and overflows the
+// card at the normal size. The type shrinks just enough to fit on one line, down to a floor
+// where it is still readable on a printed A3 sheet.
+const SLOT_FONT_SIZE = 10;
+const SLOT_FONT_MIN = 6;
+
+function drawSlotLabel(doc, text, x, centerY, maxWidth) {
+  let size = SLOT_FONT_SIZE;
+  doc.fontSize(size);
+  while (size > SLOT_FONT_MIN && doc.widthOfString(text) > maxWidth) {
+    size -= 0.25;
+    doc.fontSize(size);
+  }
+  doc.text(text, x, centerY - size / 2 - 1, { width: maxWidth, lineBreak: false, ellipsis: true });
+  doc.fontSize(SLOT_FONT_SIZE);
 }
 
 // Recursively centers each round's matches on the midpoint of the two matches feeding into
@@ -76,7 +102,7 @@ function computeCenters(matchesInRound1, top, matchBlockHeight, totalRounds) {
   return centers;
 }
 
-function drawBracketPage(doc, tournamentName, bracket) {
+function drawBracketPage(doc, tournamentName, bracket, entriesById) {
   const pageWidth = doc.page.width;
   const pageHeight = doc.page.height;
 
@@ -137,14 +163,14 @@ function drawBracketPage(doc, tournamentName, bracket) {
 
       if (r === 1) {
         const slot = (slots || []).find((s) => s.match === i) || {};
-        const p1Label = slotCodeLabel(slot.p1);
-        const p2Label = slotCodeLabel(slot.p2);
-        doc.fillColor(COLOR_TEXT).font("Helvetica").fontSize(10);
+        const p1Label = slotCodeLabel(slot.p1, entriesById);
+        const p2Label = slotCodeLabel(slot.p2, entriesById);
+        doc.fillColor(COLOR_TEXT).font("Helvetica");
         if (p1Label) {
-          doc.text(p1Label, colLeft + 8, cardTop + cardHeight / 4 - 5, { width: cardWidth - 16, lineBreak: false });
+          drawSlotLabel(doc, p1Label, colLeft + 8, cardTop + cardHeight / 4, cardWidth - 16);
         }
         if (p2Label) {
-          doc.text(p2Label, colLeft + 8, center + cardHeight / 4 - 5, { width: cardWidth - 16, lineBreak: false });
+          drawSlotLabel(doc, p2Label, colLeft + 8, center + cardHeight / 4, cardWidth - 16);
         }
       }
       // Rounds 2+ are intentionally left blank — an empty card to hand-write the winner's name.
@@ -181,6 +207,8 @@ function drawBracketPage(doc, tournamentName, bracket) {
 async function main() {
   const tournament = JSON.parse(fs.readFileSync(path.join(DATA_DIR, "tournament.json"), "utf-8"));
   const knockouts = JSON.parse(fs.readFileSync(path.join(DATA_DIR, "knockouts.json"), "utf-8"));
+  const entries = JSON.parse(fs.readFileSync(path.join(DATA_DIR, "entries.json"), "utf-8"));
+  const entriesById = new Map(entries.map((e) => [e.id, e]));
 
   const events = tournament.events || [];
   const brackets = events.map((ev) => knockouts.find((b) => b.event === ev)).filter(Boolean);
@@ -198,7 +226,7 @@ async function main() {
 
   brackets.forEach((bracket) => {
     doc.addPage({ size: "A3", layout: "portrait", margin: 0 });
-    drawBracketPage(doc, tournament.name, bracket);
+    drawBracketPage(doc, tournament.name, bracket, entriesById);
   });
 
   doc.end();
