@@ -214,13 +214,70 @@ function buildGroupEntries(groups, schedule) {
   return entries;
 }
 
-// Round-1 names are only known up front for slots that name a competitor directly
-// ("entry:<id>"), which is how events with no group stage are drawn. A group placing
-// like "1W" stays blank on the card, to be written in once that group finishes.
-function slotName(raw, entriesById) {
-  if (!raw || raw === "bye" || !raw.startsWith("entry:")) return "";
-  const entry = entriesById.get(raw.slice("entry:".length));
-  return entry ? entry.name : "";
+// A round-1 slot names a competitor directly ("entry:<id>", how an event with no group
+// stage is drawn), is a bye, or is a group placing like "1W" whose name is not known
+// until that group finishes.
+function slotSide(raw, entriesById) {
+  if (!raw) return { name: "", isBye: false };
+  if (raw === "bye") return { name: "", isBye: true };
+  if (raw.startsWith("entry:")) {
+    const entry = entriesById.get(raw.slice("entry:".length));
+    return { name: entry ? entry.name : "", isBye: false };
+  }
+  return { name: "", isBye: false };
+}
+
+// Mirrors the control panel: a digit is games won, "W" is a walkover.
+function matchWinnerSide(score) {
+  if (!score) return null;
+  const { a, b } = score;
+  if (a === "" || a == null || b === "" || b == null) return null;
+  if (a === "W" && b === "W") return null;
+  if (a === "W") return "b";
+  if (b === "W") return "a";
+  const na = Number(a);
+  const nb = Number(b);
+  if (Number.isNaN(na) || Number.isNaN(nb) || na === nb) return null;
+  return na > nb ? "a" : "b";
+}
+
+// Works out who is on each card for every round, not just the first. A bye means the
+// other side advances without playing, so a draw with byes already decides several
+// later-round places before a ball is hit -- those names belong on the printed card.
+// A side that is still undecided stays blank, to be written in on the day.
+function knockoutNameGrid(bracket, entriesById) {
+  const totalRounds = totalKnockoutRounds(bracket.size);
+  const scores = bracket.scores || {};
+  const rounds = [];
+
+  const round1 = (bracket.round1Slots || [])
+    .slice()
+    .sort((x, y) => x.match - y.match)
+    .map((slot) => ({ p1: slotSide(slot.p1, entriesById), p2: slotSide(slot.p2, entriesById) }));
+  rounds.push(round1);
+
+  for (let r = 2; r <= totalRounds; r++) {
+    const prev = rounds[r - 2];
+    const matchesInRound = bracket.size / Math.pow(2, r);
+    const round = [];
+    for (let m = 1; m <= matchesInRound; m++) {
+      round.push({ p1: advancedFrom(prev[(m - 1) * 2], r - 1, (m - 1) * 2 + 1, scores),
+                   p2: advancedFrom(prev[(m - 1) * 2 + 1], r - 1, (m - 1) * 2 + 2, scores) });
+    }
+    rounds.push(round);
+  }
+  return rounds;
+}
+
+function advancedFrom(feed, feedRound, feedMatch, scores) {
+  const blank = { name: "", isBye: false };
+  if (!feed) return blank;
+  if (feed.p1.isBye && !feed.p2.isBye) return feed.p2;
+  if (feed.p2.isBye && !feed.p1.isBye) return feed.p1;
+  const side = matchWinnerSide(scores[`R${feedRound}M${feedMatch}`]);
+  if (side === "a") return feed.p1;
+  if (side === "b") return feed.p2;
+  return blank;
 }
 
 function buildKnockoutEntries(knockouts, schedule, entriesById) {
@@ -229,13 +286,13 @@ function buildKnockoutEntries(knockouts, schedule, entriesById) {
 
   knockouts.forEach((bracket) => {
     const totalRounds = totalKnockoutRounds(bracket.size);
+    const grid = knockoutNameGrid(bracket, entriesById);
 
     // Round 1: schedules number only the real (non-bye) matches, so a bye-skipping counter is
     // used both for the printed "Match" number and for looking the match up in the schedule.
     let scheduleMatchCounter = 0;
-    (bracket.round1Slots || []).forEach((slot) => {
-      const isBye = slot.p1 === "bye" || slot.p2 === "bye";
-      if (isBye) return;
+    grid[0].forEach((pair) => {
+      if (pair.p1.isBye || pair.p2.isBye) return; // a bye is never played, so no card
       scheduleMatchCounter += 1;
       const matchNumber = scheduleMatchCounter;
       const hit = firstHit(scheduleHitsForMatch(schedule, bracket.event, 1, totalRounds, matchNumber));
@@ -245,23 +302,25 @@ function buildKnockoutEntries(knockouts, schedule, entriesById) {
         match: matchNumber,
         time: hit ? hit.time : null,
         table: hit ? hit.table : null,
-        playerA: slotName(slot.p1, entriesById),
-        playerB: slotName(slot.p2, entriesById),
+        playerA: pair.p1.name,
+        playerB: pair.p2.name,
         sortKey: sortKey++,
       });
     });
 
-    // Later rounds never have byes.
     for (let r = 2; r <= totalRounds; r++) {
       const matchesInRound = bracket.size / Math.pow(2, r);
       for (let m = 1; m <= matchesInRound; m++) {
         const hit = firstHit(scheduleHitsForMatch(schedule, bracket.event, r, totalRounds, m));
+        const pair = grid[r - 1][m - 1] || { p1: { name: "" }, p2: { name: "" } };
         entries.push({
           event: bracket.event,
           round: knockoutRoundLabel(r, totalRounds),
           match: m,
           time: hit ? hit.time : null,
           table: hit ? hit.table : null,
+          playerA: pair.p1.name,
+          playerB: pair.p2.name,
           sortKey: sortKey++,
         });
       }
