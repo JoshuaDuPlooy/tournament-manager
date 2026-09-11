@@ -688,6 +688,9 @@ tr:hover td {
   color: var(--color-muted);
   font-weight: normal;
 }
+.medal-bronze + .medal-bronze {
+  margin-top: 6px;
+}
 #medals-tbody .placeholder {
   color: var(--color-muted);
 }

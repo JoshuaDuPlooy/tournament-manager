@@ -1,5 +1,16 @@
 {
-  "dedicated": [],
+  "dedicated": [
+    {
+      "id": "5baa445b-4643-4ca6-8090-5d71c8ea83e4",
+      "name": "Kirshwan Steyn",
+      "club": "Ravens"
+    },
+    {
+      "id": "4da716f6-3377-4a77-aa5d-e4b0a8199c1b",
+      "name": "Aiden Oransie",
+      "club": "Ravens"
+    }
+  ],
   "unavailable": {
     "amien phillips": {
       "reason": "left",
@@ -48,6 +59,22 @@
     "terence cable": {
       "reason": "left",
       "at": "2026-09-11T11:56:46.665Z"
+    },
+    "gaston koetaan": {
+      "reason": "left",
+      "at": "2026-09-11T17:35:02.437Z"
+    },
+    "allan clark": {
+      "reason": "left",
+      "at": "2026-09-11T17:35:11.532Z"
+    },
+    "delton alexander": {
+      "reason": "umpired",
+      "at": "2026-09-11T17:35:23.868Z"
+    },
+    "pedro fortuin": {
+      "reason": "umpired",
+      "at": "2026-09-11T17:35:25.164Z"
     }
   }
 }
