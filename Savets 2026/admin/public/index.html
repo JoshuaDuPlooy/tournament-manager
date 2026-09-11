@@ -16,6 +16,7 @@
       <button class="tab-btn" data-tab="groups">Groups</button>
       <button class="tab-btn" data-tab="knockouts">Knockouts</button>
       <button class="tab-btn" data-tab="schedule">Schedule</button>
+      <button class="tab-btn" data-tab="umpires">Umpires</button>
     </nav>
   </header>
 
@@ -210,6 +211,50 @@
         <table class="schedule-table" id="schedule-table"></table>
       </div>
       <p class="empty" id="schedule-empty" hidden>No schedule imported yet.</p>
+    </section>
+
+    <section id="tab-umpires" class="tab-panel">
+      <h2>Umpires</h2>
+
+      <h3>Available now</h3>
+      <p class="hint">
+        Players appear here once they are out of every event they entered. A player
+        umpires one match and then comes off the list; a dedicated umpire stays on it.
+      </p>
+      <table id="umpires-available-table">
+        <thead>
+          <tr><th>Name</th><th>Club</th><th>Type</th><th>Free since</th><th></th></tr>
+        </thead>
+        <tbody id="umpires-available-tbody"></tbody>
+      </table>
+      <p class="empty" id="umpires-available-empty" hidden>Nobody is available to umpire yet.</p>
+
+      <h3>Add a dedicated umpire</h3>
+      <form id="dedicated-form" class="form-grid">
+        <label>Name <input name="name" required /></label>
+        <label>Club <input name="club" /></label>
+        <button type="submit">Add</button>
+      </form>
+      <p id="dedicated-status" class="status-msg"></p>
+
+      <h3>Off the list</h3>
+      <table id="umpires-off-table">
+        <thead>
+          <tr><th>Name</th><th>Club</th><th>Type</th><th>Why</th><th></th></tr>
+        </thead>
+        <tbody id="umpires-off-tbody"></tbody>
+      </table>
+      <p class="empty" id="umpires-off-empty" hidden>Nobody has been taken off the list.</p>
+
+      <h3>Still playing</h3>
+      <p class="hint">Not yet available to umpire, and what is keeping them in.</p>
+      <table id="umpires-busy-table">
+        <thead>
+          <tr><th>Name</th><th>Club</th><th>Still in</th></tr>
+        </thead>
+        <tbody id="umpires-busy-tbody"></tbody>
+      </table>
+      <p class="empty" id="umpires-busy-empty" hidden>Nobody is still playing.</p>
     </section>
   </main>
 

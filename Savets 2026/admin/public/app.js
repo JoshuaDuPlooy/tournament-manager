@@ -3,6 +3,7 @@ const state = {
   entries: [],
   groups: [],
   rankings: { groups: [], knockouts: [] },
+  umpires: { dedicated: [], unavailable: {} },
   knockouts: [],
   schedule: { tables: [], rows: [] },
 };
@@ -923,6 +924,265 @@ function renderEventRankings(panelKey = "groups") {
   document.getElementById(panel.ids.empty).hidden = withRanks.length > 0;
 }
 
+
+// ---- Umpires ----
+//
+// The umpire pool is people, not entries: a doubles entry is two people, and someone
+// can be in several events at once, so eligibility is worked out per person. A player
+// may only umpire once they are out of EVERY event they entered.
+
+function personKey(name) {
+  return String(name || "").trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+// Every individual named by an entry — a doubles entry names two.
+function peopleInEntry(entry) {
+  return splitDoublesPartners(entry.name).map((name) => ({ name, club: entry.club || "" }));
+}
+
+// Which placings a bracket actually draws from a given group. A group's third and
+// fourth are out even when the group is finished, and so is its runner-up if the
+// bracket only takes winners.
+function placingsDrawnFromGroup(bracket, groupNumber) {
+  const drawn = new Set();
+  (bracket.round1Slots || []).forEach((slot) => {
+    [slot.p1, slot.p2].forEach((raw) => {
+      const m = String(raw || "").match(/^(\d+)(W|R)$/);
+      if (m && m[1] === String(groupNumber)) drawn.add(m[2]);
+    });
+  });
+  return drawn;
+}
+
+// The people still competing in one event. Anyone entered in the event but absent from
+// this set is out of it.
+function peopleStillInEvent(event) {
+  const groupsForEvent = state.groups.filter((g) => g.event === event);
+  const entriesForEvent = state.entries.filter((e) => (e.events || []).includes(event));
+  const bracket = state.knockouts.find((b) => b.event === event);
+  const alive = new Set();
+
+  // Nothing drawn yet — everyone entered is still in it.
+  if (groupsForEvent.length === 0 && !bracket) {
+    entriesForEvent.forEach((e) => peopleInEntry(e).forEach((p) => alive.add(personKey(p.name))));
+    return alive;
+  }
+
+  const advanced = new Set();
+  groupsForEvent.forEach((group) => {
+    const players = groupPlayers(group);
+    if (!isGroupComplete(group)) {
+      // Group still running, so nobody in it is out yet.
+      players.forEach((p) => splitDoublesPartners(p.name).forEach((n) => alive.add(personKey(n))));
+      return;
+    }
+    const drawn = bracket ? placingsDrawnFromGroup(bracket, group.group) : new Set();
+    computeStandings(group).forEach((p, index) => {
+      const placing = index === 0 ? "W" : index === 1 ? "R" : null;
+      if (placing && drawn.has(placing)) {
+        splitDoublesPartners(p.name).forEach((n) => advanced.add(personKey(n)));
+      }
+    });
+  });
+
+  if (!bracket) {
+    advanced.forEach((k) => alive.add(k));
+    return alive;
+  }
+
+  // Everyone in the bracket: group qualifiers plus anyone picked into it directly.
+  const inBracket = new Set(advanced);
+  (bracket.round1Slots || []).forEach((slot) => {
+    [slot.p1, slot.p2].forEach((raw) => {
+      if (!raw || !String(raw).startsWith("entry:")) return;
+      const entry = entriesForEvent.find((e) => e.id === String(raw).slice("entry:".length));
+      if (entry) peopleInEntry(entry).forEach((p) => inBracket.add(personKey(p.name)));
+    });
+  });
+
+  const beaten = new Set();
+  resolveBracket(bracket, groupsForEvent, entriesForEvent).forEach((round) => {
+    round.forEach((match) => {
+      if (!match.winnerSide) return;
+      const loser = match.winnerSide === "a" ? match.p2 : match.p1;
+      if (!loser || !loser.resolved || loser.isBye) return;
+      splitDoublesPartners(loser.name).forEach((n) => beaten.add(personKey(n)));
+    });
+  });
+
+  inBracket.forEach((k) => {
+    if (!beaten.has(k)) alive.add(k);
+  });
+  return alive;
+}
+
+// Every person in the tournament, with the events they are still alive in.
+function umpirePool() {
+  const people = new Map();
+  state.entries.forEach((entry) => {
+    peopleInEntry(entry).forEach((p) => {
+      const key = personKey(p.name);
+      if (!key) return;
+      if (!people.has(key)) people.set(key, { key, name: p.name, club: p.club, events: new Set(), stillIn: new Set() });
+      const person = people.get(key);
+      if (!person.club && p.club) person.club = p.club;
+      (entry.events || []).forEach((ev) => person.events.add(ev));
+    });
+  });
+
+  const events = (state.tournament.events || []).filter((ev) =>
+    [...people.values()].some((p) => p.events.has(ev))
+  );
+  events.forEach((event) => {
+    const alive = peopleStillInEvent(event);
+    people.forEach((person) => {
+      if (person.events.has(event) && alive.has(person.key)) person.stillIn.add(event);
+    });
+  });
+
+  return [...people.values()].sort((a, b) => a.name.localeCompare(b.name));
+}
+
+async function saveUmpires(patch) {
+  state.umpires = await api("/api/umpires", { method: "PUT", body: JSON.stringify(patch) });
+  renderUmpiresTab();
+}
+
+function setUmpireUnavailable(key, reason) {
+  const unavailable = { ...(state.umpires.unavailable || {}) };
+  if (reason) unavailable[key] = { reason, at: new Date().toISOString() };
+  else delete unavailable[key];
+  return saveUmpires({ unavailable });
+}
+
+function umpireRowActions(kind, key, id) {
+  const buttons = [];
+  if (kind === "player") {
+    buttons.push(`<button type="button" class="secondary" data-ump-action="umpired" data-key="${key}">Umpired a match</button>`);
+  }
+  buttons.push(`<button type="button" class="secondary" data-ump-action="left" data-key="${key}">Left venue</button>`);
+  if (kind === "dedicated") {
+    buttons.push(`<button type="button" class="link danger" data-ump-action="delete" data-id="${id}">Delete</button>`);
+  }
+  return buttons.join(" ");
+}
+
+function renderUmpiresTab() {
+  const unavailable = state.umpires.unavailable || {};
+  const dedicated = state.umpires.dedicated || [];
+  const pool = umpirePool();
+
+  const available = [];
+  const off = [];
+  const busy = [];
+
+  dedicated.forEach((u) => {
+    const key = `dedicated:${u.id}`;
+    const row = { key, id: u.id, name: u.name, club: u.club, kind: "dedicated" };
+    if (unavailable[key]) off.push({ ...row, ...unavailable[key] });
+    else available.push(row);
+  });
+
+  pool.forEach((person) => {
+    if (person.stillIn.size > 0) {
+      busy.push(person);
+      return;
+    }
+    const row = { key: person.key, name: person.name, club: person.club, kind: "player" };
+    if (unavailable[person.key]) off.push({ ...row, ...unavailable[person.key] });
+    else available.push(row);
+  });
+
+  const availableBody = document.getElementById("umpires-available-tbody");
+  availableBody.innerHTML = available
+    .map(
+      (r) => `
+        <tr>
+          <td>${r.name}</td>
+          <td>${r.club || "—"}</td>
+          <td>${r.kind === "dedicated" ? "Dedicated" : "Player"}</td>
+          <td>${r.kind === "dedicated" ? "—" : "Out of all events"}</td>
+          <td class="row-actions">${umpireRowActions(r.kind, r.key, r.id)}</td>
+        </tr>
+      `
+    )
+    .join("");
+  document.getElementById("umpires-available-table").hidden = available.length === 0;
+  document.getElementById("umpires-available-empty").hidden = available.length > 0;
+
+  const offBody = document.getElementById("umpires-off-tbody");
+  offBody.innerHTML = off
+    .map(
+      (r) => `
+        <tr>
+          <td>${r.name}</td>
+          <td>${r.club || "—"}</td>
+          <td>${r.kind === "dedicated" ? "Dedicated" : "Player"}</td>
+          <td>${r.reason === "umpired" ? "Umpired a match" : "Left the venue"}</td>
+          <td class="row-actions">
+            <button type="button" class="secondary" data-ump-action="restore" data-key="${r.key}">Put back</button>
+            ${r.kind === "dedicated" ? `<button type="button" class="link danger" data-ump-action="delete" data-id="${r.id}">Delete</button>` : ""}
+          </td>
+        </tr>
+      `
+    )
+    .join("");
+  document.getElementById("umpires-off-table").hidden = off.length === 0;
+  document.getElementById("umpires-off-empty").hidden = off.length > 0;
+
+  const busyBody = document.getElementById("umpires-busy-tbody");
+  busyBody.innerHTML = busy
+    .map(
+      (p) => `
+        <tr>
+          <td>${p.name}</td>
+          <td>${p.club || "—"}</td>
+          <td>${[...p.stillIn].join(", ")}</td>
+        </tr>
+      `
+    )
+    .join("");
+  document.getElementById("umpires-busy-table").hidden = busy.length === 0;
+  document.getElementById("umpires-busy-empty").hidden = busy.length > 0;
+}
+
+document.getElementById("tab-umpires").addEventListener("click", async (event) => {
+  const button = event.target.closest("[data-ump-action]");
+  if (!button) return;
+  const { umpAction, key, id } = button.dataset;
+  try {
+    if (umpAction === "umpired") await setUmpireUnavailable(key, "umpired");
+    else if (umpAction === "left") await setUmpireUnavailable(key, "left");
+    else if (umpAction === "restore") await setUmpireUnavailable(key, null);
+    else if (umpAction === "delete") {
+      await api(`/api/umpires/dedicated/${id}`, { method: "DELETE" });
+      state.umpires = await api("/api/umpires");
+      renderUmpiresTab();
+    }
+  } catch (err) {
+    alert(err.message);
+  }
+});
+
+document.getElementById("dedicated-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const form = event.target;
+  const status = document.getElementById("dedicated-status");
+  try {
+    await api("/api/umpires/dedicated", {
+      method: "POST",
+      body: JSON.stringify({ name: form.name.value, club: form.club.value }),
+    });
+    state.umpires = await api("/api/umpires");
+    form.reset();
+    status.textContent = "Added.";
+    setTimeout(() => (status.textContent = ""), 2000);
+    renderUmpiresTab();
+  } catch (err) {
+    status.textContent = err.message;
+  }
+});
+
 // ---- Knockouts ----
 
 const knockoutsEventTabsContainer = document.getElementById("knockouts-event-tabs");
@@ -1419,18 +1679,20 @@ async function applyTournamentIdentity() {
 
 async function loadAll() {
   await applyTournamentIdentity();
-  const [tournament, entries, groups, knockouts, schedule] = await Promise.all([
+  const [tournament, entries, groups, knockouts, schedule, umpires] = await Promise.all([
     api("/api/tournament"),
     api("/api/entries"),
     api("/api/groups"),
     api("/api/knockouts"),
     api("/api/schedule"),
+    api("/api/umpires"),
   ]);
   state.tournament = tournament;
   state.entries = entries;
   state.groups = groups;
   state.knockouts = knockouts;
   state.schedule = schedule;
+  state.umpires = umpires;
   renderTournamentForm();
   entriesVisibleToggle.checked = state.tournament.entriesVisible !== false;
   groupsVisibleToggle.checked = state.tournament.groupsVisible !== false;
@@ -1442,6 +1704,7 @@ async function loadAll() {
   renderScheduleTab();
   renderKnockoutsTab();
   refreshRankings("knockouts");
+  renderUmpiresTab();
 }
 
 loadAll().catch((err) => {

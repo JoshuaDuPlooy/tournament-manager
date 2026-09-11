@@ -25,6 +25,7 @@ const ENTRIES_FILE = path.join(DATA_DIR, "entries.json");
 const GROUPS_FILE = path.join(DATA_DIR, "groups.json");
 const KNOCKOUTS_FILE = path.join(DATA_DIR, "knockouts.json");
 const SCHEDULE_FILE = path.join(DATA_DIR, "schedule.json");
+const UMPIRES_FILE = path.join(DATA_DIR, "umpires.json");
 const GROUPS_IMPORT_FILE = path.join(__dirname, "Groups.xlsx");
 const RANKINGS_FILE = path.join(__dirname, "Rankings.xlsx");
 const SCHEDULE_IMPORT_FILE = path.join(__dirname, "Schedule.xlsx");
@@ -544,6 +545,73 @@ app.get("/api/rankings", async (req, res, next) => {
     });
 
     res.json(rankings);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ---- Umpires ----
+// Who can umpire right now. Two kinds:
+//   - dedicated: added by hand, they umpire continuously and stay on the list
+//   - players:   derived, not stored -- a player becomes available once they are out of
+//                every event they entered, and comes off again after one match
+// Only the dedicated list and the "unavailable" map are persisted; availability of
+// players is recomputed from the draw each time, so it follows results automatically.
+// "unavailable" is keyed by person (lowercased name) or "dedicated:<id>", with a reason
+// of "umpired" (did their one match) or "left" (gone from the venue).
+
+const EMPTY_UMPIRES = { dedicated: [], unavailable: {} };
+
+async function readUmpires() {
+  try {
+    const data = await readJSON(UMPIRES_FILE);
+    return { ...EMPTY_UMPIRES, ...data };
+  } catch (err) {
+    if (err.code === "ENOENT") return { ...EMPTY_UMPIRES };
+    throw err;
+  }
+}
+
+app.get("/api/umpires", async (req, res, next) => {
+  try {
+    res.json(await readUmpires());
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.put("/api/umpires", async (req, res, next) => {
+  try {
+    const existing = await readUmpires();
+    const updated = { ...existing, ...req.body };
+    await writeJSON(UMPIRES_FILE, updated);
+    res.json(updated);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.post("/api/umpires/dedicated", async (req, res, next) => {
+  try {
+    const name = String(req.body.name || "").trim();
+    if (!name) return res.status(400).json({ error: "An umpire needs a name" });
+    const umpires = await readUmpires();
+    const umpire = { id: crypto.randomUUID(), name, club: String(req.body.club || "").trim() };
+    umpires.dedicated.push(umpire);
+    await writeJSON(UMPIRES_FILE, umpires);
+    res.status(201).json(umpire);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.delete("/api/umpires/dedicated/:id", async (req, res, next) => {
+  try {
+    const umpires = await readUmpires();
+    umpires.dedicated = umpires.dedicated.filter((u) => u.id !== req.params.id);
+    delete umpires.unavailable[`dedicated:${req.params.id}`];
+    await writeJSON(UMPIRES_FILE, umpires);
+    res.status(204).end();
   } catch (err) {
     next(err);
   }

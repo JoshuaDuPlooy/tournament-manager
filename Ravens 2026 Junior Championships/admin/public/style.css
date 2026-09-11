@@ -654,3 +654,18 @@ button.link.danger {
   letter-spacing: 0.5px;
   padding: 8px 14px;
 }
+
+/* Umpires: the per-row action buttons, kept on one line and out of the way. */
+.row-actions {
+  white-space: nowrap;
+  text-align: right;
+}
+.row-actions button + button {
+  margin-left: 6px;
+}
+#tab-umpires h3 {
+  margin-top: 1.4rem;
+}
+#tab-umpires .hint {
+  margin-bottom: 0.6rem;
+}
