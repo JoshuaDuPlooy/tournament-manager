@@ -931,6 +931,24 @@ function renderEventRankings(panelKey = "groups") {
 // can be in several events at once, so eligibility is worked out per person. A player
 // may only umpire once they are out of EVERY event they entered.
 
+// Which day of play the umpire list is for. "" means the whole tournament.
+let selectedUmpireDay = null;
+
+// Events with something on the schedule for a given day. An event a player is still
+// alive in does not make them unavailable today if it is not being played today.
+function eventsScheduledOn(day) {
+  const events = state.tournament.events || [];
+  const scheduled = new Set();
+  (state.schedule.rows || []).forEach((row) => {
+    if (day && (row.day || "") !== day) return;
+    Object.values(row.cells || {}).forEach((text) => {
+      const event = events.find((e) => String(text).toLowerCase().startsWith(e.toLowerCase()));
+      if (event) scheduled.add(event);
+    });
+  });
+  return scheduled;
+}
+
 function personKey(name) {
   return String(name || "").trim().toLowerCase().replace(/\s+/g, " ");
 }
@@ -1017,7 +1035,7 @@ function peopleStillInEvent(event) {
 }
 
 // Every person in the tournament, with the events they are still alive in.
-function umpirePool() {
+function umpirePool(day) {
   const people = new Map();
   state.entries.forEach((entry) => {
     peopleInEntry(entry).forEach((p) => {
@@ -1033,7 +1051,11 @@ function umpirePool() {
   const events = (state.tournament.events || []).filter((ev) =>
     [...people.values()].some((p) => p.events.has(ev))
   );
+  // On a given day only that day's events can hold someone back; with no day chosen
+  // the whole tournament counts.
+  const countsToday = day ? eventsScheduledOn(day) : null;
   events.forEach((event) => {
+    if (countsToday && !countsToday.has(event)) return;
     const alive = peopleStillInEvent(event);
     people.forEach((person) => {
       if (person.events.has(event) && alive.has(person.key)) person.stillIn.add(event);
@@ -1070,7 +1092,30 @@ function umpireRowActions(kind, key, id) {
 function renderUmpiresTab() {
   const unavailable = state.umpires.unavailable || {};
   const dedicated = state.umpires.dedicated || [];
-  const pool = umpirePool();
+
+  const days = scheduleDayList(state.schedule).filter(Boolean);
+  if (selectedUmpireDay === null) selectedUmpireDay = days[0] || "";
+  if (selectedUmpireDay && !days.includes(selectedUmpireDay)) selectedUmpireDay = days[0] || "";
+
+  const daySelect = document.getElementById("umpires-day-select");
+  daySelect.innerHTML =
+    `<option value="">Whole tournament</option>` +
+    days.map((d) => `<option value="${d}"${d === selectedUmpireDay ? " selected" : ""}>${d}</option>`).join("");
+  daySelect.parentElement.hidden = days.length === 0;
+
+  const todaysEvents = selectedUmpireDay ? [...eventsScheduledOn(selectedUmpireDay)] : [];
+  document.getElementById("umpires-hint").textContent = selectedUmpireDay
+    ? `Players appear here once they are out of everything being played on ${selectedUmpireDay}` +
+      `${todaysEvents.length ? ` (${todaysEvents.join(", ")})` : ""}` +
+      ` — an event on another day does not hold them back. A player umpires one match and` +
+      ` then comes off the list; a dedicated umpire stays on it.`
+    : "Players appear here once they are out of every event they entered. A player umpires" +
+      " one match and then comes off the list; a dedicated umpire stays on it.";
+  document.getElementById("umpires-busy-hint").textContent = selectedUmpireDay
+    ? `Still playing on ${selectedUmpireDay}, so not available to umpire today.`
+    : "Not yet available to umpire, and what is keeping them in.";
+
+  const pool = umpirePool(selectedUmpireDay);
 
   const available = [];
   const off = [];
@@ -1093,6 +1138,10 @@ function renderUmpiresTab() {
     else available.push(row);
   });
 
+  const freeReason = selectedUmpireDay
+    ? `Nothing on ${selectedUmpireDay}`
+    : "Out of all events";
+
   const availableBody = document.getElementById("umpires-available-tbody");
   availableBody.innerHTML = available
     .map(
@@ -1101,7 +1150,7 @@ function renderUmpiresTab() {
           <td>${r.name}</td>
           <td>${r.club || "—"}</td>
           <td>${r.kind === "dedicated" ? "Dedicated" : "Player"}</td>
-          <td>${r.kind === "dedicated" ? "—" : "Out of all events"}</td>
+          <td>${r.kind === "dedicated" ? "—" : freeReason}</td>
           <td class="row-actions">${umpireRowActions(r.kind, r.key, r.id)}</td>
         </tr>
       `
@@ -1145,6 +1194,11 @@ function renderUmpiresTab() {
   document.getElementById("umpires-busy-table").hidden = busy.length === 0;
   document.getElementById("umpires-busy-empty").hidden = busy.length > 0;
 }
+
+document.getElementById("umpires-day-select").addEventListener("change", (event) => {
+  selectedUmpireDay = event.target.value;
+  renderUmpiresTab();
+});
 
 document.getElementById("tab-umpires").addEventListener("click", async (event) => {
   const button = event.target.closest("[data-ump-action]");

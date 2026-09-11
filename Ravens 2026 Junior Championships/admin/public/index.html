@@ -216,14 +216,17 @@
     <section id="tab-umpires" class="tab-panel">
       <h2>Umpires</h2>
 
+      <div class="tab-header-row">
+        <label class="event-filter-label">Day
+          <select id="umpires-day-select"></select>
+        </label>
+      </div>
+
       <h3>Available now</h3>
-      <p class="hint">
-        Players appear here once they are out of every event they entered. A player
-        umpires one match and then comes off the list; a dedicated umpire stays on it.
-      </p>
+      <p class="hint" id="umpires-hint"></p>
       <table id="umpires-available-table">
         <thead>
-          <tr><th>Name</th><th>Club</th><th>Type</th><th>Free since</th><th></th></tr>
+          <tr><th>Name</th><th>Club</th><th>Type</th><th>Why free</th><th></th></tr>
         </thead>
         <tbody id="umpires-available-tbody"></tbody>
       </table>
@@ -247,7 +250,7 @@
       <p class="empty" id="umpires-off-empty" hidden>Nobody has been taken off the list.</p>
 
       <h3>Still playing</h3>
-      <p class="hint">Not yet available to umpire, and what is keeping them in.</p>
+      <p class="hint" id="umpires-busy-hint">Not yet available to umpire, and what is keeping them in.</p>
       <table id="umpires-busy-table">
         <thead>
           <tr><th>Name</th><th>Club</th><th>Still in</th></tr>
