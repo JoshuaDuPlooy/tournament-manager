@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Medals</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/theme.css" />
+</head>
+<body>
+  <nav class="top-nav">
+    <div class="nav-links" id="navLinks">
+      <a href="index.html">Overview</a>
+      <a href="entries.html" id="nav-entries">Entries</a>
+      <a href="groups.html">Groups</a>
+      <a href="knockouts.html">Knockouts</a>
+      <a href="schedule.html">Schedule</a>
+      <a href="medals.html" class="active">Medals</a>
+    </div>
+    <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <div class="page-header">
+    <img src="logo.png" alt="Tournament logo" />
+    <div class="page-header-text">
+      <h1 id="tournament-name">Loading&hellip;</h1>
+      <p id="tournament-subtitle"></p>
+    </div>
+  </div>
+
+  <main>
+    <h2>Medals</h2>
+    <table id="medals-table">
+      <thead>
+        <tr><th>Event</th><th>Winner</th><th>Runner-up</th></tr>
+      </thead>
+      <tbody id="medals-tbody"></tbody>
+    </table>
+    <p class="empty" id="medals-empty" hidden>No finals have been played yet.</p>
+  </main>
+
+  <script src="js/data.js"></script>
+  <script src="js/bracket.js"></script>
+  <script>
+    function toggleMenu() {
+      document.getElementById("navLinks").classList.toggle("open");
+      document.getElementById("hamburger").classList.toggle("open");
+    }
+
+    // The final is the single match of the last round; its loser took the runner-up
+    // medal. Anything short of a decided final shows a dash rather than a guess.
+    function medalsForBracket(bracket, groupsForEvent, entriesForEvent) {
+      const rounds = resolveBracket(bracket, groupsForEvent, entriesForEvent);
+      const final = rounds[rounds.length - 1] && rounds[rounds.length - 1][0];
+      if (!final || !final.winnerSide) return null;
+      const winner = final.winnerSide === "a" ? final.p1 : final.p2;
+      const runnerUp = final.winnerSide === "a" ? final.p2 : final.p1;
+      if (!winner.resolved || winner.isBye) return null;
+      return {
+        winner,
+        runnerUp: runnerUp && runnerUp.resolved && !runnerUp.isBye ? runnerUp : null,
+      };
+    }
+
+    function medalCellHTML(side) {
+      if (!side) return "<span class=\"placeholder\">&mdash;</span>";
+      return `${side.name}${side.club ? `<span class="medal-club">${side.club}</span>` : ""}`;
+    }
+
+    loadMedalsData().then(({ tournament, knockouts, groups, entries }) => {
+      document.getElementById("tournament-name").textContent = tournament.name;
+      document.getElementById("tournament-subtitle").textContent =
+        `${tournament.startDate} \u2014 ${tournament.endDate} \u00b7 ${tournament.venue}`;
+
+      const rows = (tournament.events || [])
+        .map((event) => {
+          const bracket = knockouts.find((b) => b.event === event);
+          if (!bracket) return null;
+          const medals = medalsForBracket(
+            bracket,
+            groups.filter((g) => g.event === event),
+            entries.filter((e) => (e.events || []).includes(event))
+          );
+          if (!medals) return null;
+          return { event, ...medals };
+        })
+        .filter(Boolean);
+
+      const tbody = document.getElementById("medals-tbody");
+      tbody.innerHTML = rows
+        .map(
+          (r) => `
+            <tr>
+              <td class="medal-event">${r.event}</td>
+              <td class="medal-winner">${medalCellHTML(r.winner)}</td>
+              <td>${medalCellHTML(r.runnerUp)}</td>
+            </tr>
+          `
+        )
+        .join("");
+
+      document.getElementById("medals-table").hidden = rows.length === 0;
+      document.getElementById("medals-empty").hidden = rows.length > 0;
+    });
+  </script>
+</body>
+</html>

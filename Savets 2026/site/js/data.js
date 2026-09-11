@@ -54,6 +54,17 @@ async function loadKnockoutsData() {
   return { tournament, knockouts, groups, schedule, entries };
 }
 
+async function loadMedalsData() {
+  const [tournament, knockouts, groups, entries] = await Promise.all([
+    loadJSON("data/tournament.json"),
+    loadJSON("data/knockouts.json"),
+    loadJSON("data/groups.json"),
+    loadJSON("data/entries.json"),
+  ]);
+  applyTournamentTitle(tournament);
+  return { tournament, knockouts, groups, entries };
+}
+
 async function loadScheduleData() {
   const [tournament, schedule] = await Promise.all([
     loadJSON("data/tournament.json"),

@@ -674,3 +674,20 @@ tr:hover td {
   letter-spacing: 0.5px;
   padding: 9px 10px;
 }
+
+/* ── Medals ── */
+.medal-event {
+  font-weight: bold;
+}
+.medal-winner {
+  font-weight: bold;
+}
+.medal-club {
+  display: block;
+  font-size: 12px;
+  color: var(--color-muted);
+  font-weight: normal;
+}
+#medals-tbody .placeholder {
+  color: var(--color-muted);
+}
