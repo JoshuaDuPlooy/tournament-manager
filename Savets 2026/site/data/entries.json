@@ -218,7 +218,7 @@
       "Men's 40+",
       "Men's 50+"
     ],
-    "paid": false
+    "paid": true
   },
   {
     "id": "7f51c78a-855f-4a83-9828-c4e9921132aa",
@@ -268,7 +268,7 @@
   },
   {
     "id": "a20d4889-058a-4ec5-8ed7-1c9aa0b951e1",
-    "name": "Zahier Isaacs & David Nwafo",
+    "name": "Zahier Isaacs & David Nwafor",
     "club": "Nexus & GWTTC",
     "events": [
       "Men's Doubles"

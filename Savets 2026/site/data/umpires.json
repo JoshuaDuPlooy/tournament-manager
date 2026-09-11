@@ -1,4 +1,53 @@
 {
   "dedicated": [],
-  "unavailable": {}
+  "unavailable": {
+    "amien phillips": {
+      "reason": "left",
+      "at": "2026-09-11T11:53:55.613Z"
+    },
+    "andre taljaard": {
+      "reason": "left",
+      "at": "2026-09-11T11:53:56.771Z"
+    },
+    "benjamin van der ross": {
+      "reason": "left",
+      "at": "2026-09-11T11:53:57.228Z"
+    },
+    "chris sloster": {
+      "reason": "left",
+      "at": "2026-09-11T11:53:57.457Z"
+    },
+    "david nwafor": {
+      "reason": "left",
+      "at": "2026-09-11T11:53:57.655Z"
+    },
+    "jerome davies": {
+      "reason": "left",
+      "at": "2026-09-11T11:53:57.864Z"
+    },
+    "lorenzo haupt": {
+      "reason": "left",
+      "at": "2026-09-11T11:53:58.107Z"
+    },
+    "muaath adams": {
+      "reason": "left",
+      "at": "2026-09-11T11:53:58.639Z"
+    },
+    "sedick abrahams": {
+      "reason": "left",
+      "at": "2026-09-11T11:53:58.869Z"
+    },
+    "thabiet adams": {
+      "reason": "left",
+      "at": "2026-09-11T11:53:59.349Z"
+    },
+    "lindsay october": {
+      "reason": "left",
+      "at": "2026-09-11T11:56:43.529Z"
+    },
+    "terence cable": {
+      "reason": "left",
+      "at": "2026-09-11T11:56:46.665Z"
+    }
+  }
 }
