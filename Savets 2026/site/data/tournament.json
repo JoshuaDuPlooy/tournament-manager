@@ -15,7 +15,7 @@
   "groupsVisible": true,
   "scheduleVisible": true,
   "knockoutsVisible": {
-    "Men's 40+": false,
+    "Men's 40+": true,
     "Men's 50+": false,
     "Men's 60+": false,
     "Men's Doubles": true
