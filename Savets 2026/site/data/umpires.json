@@ -9,13 +9,14 @@
       "id": "4da716f6-3377-4a77-aa5d-e4b0a8199c1b",
       "name": "Aiden Oransie",
       "club": "Ravens"
+    },
+    {
+      "id": "c2a354a4-ecd3-441f-a05b-7cfa7c9c18e6",
+      "name": "Bernivin April",
+      "club": "Ravens"
     }
   ],
   "unavailable": {
-    "amien phillips": {
-      "reason": "left",
-      "at": "2026-09-11T11:53:55.613Z"
-    },
     "andre taljaard": {
       "reason": "left",
       "at": "2026-09-11T11:53:56.771Z"
@@ -56,10 +57,6 @@
       "reason": "left",
       "at": "2026-09-11T11:56:43.529Z"
     },
-    "terence cable": {
-      "reason": "left",
-      "at": "2026-09-11T11:56:46.665Z"
-    },
     "gaston koetaan": {
       "reason": "left",
       "at": "2026-09-11T17:35:02.437Z"
@@ -72,9 +69,21 @@
       "reason": "umpired",
       "at": "2026-09-11T17:35:23.868Z"
     },
-    "pedro fortuin": {
+    "quentin thomas": {
       "reason": "umpired",
-      "at": "2026-09-11T17:35:25.164Z"
+      "at": "2026-09-12T09:30:50.458Z"
+    },
+    "rafiq tofa": {
+      "reason": "umpired",
+      "at": "2026-09-12T09:30:51.578Z"
+    },
+    "dedicated:4da716f6-3377-4a77-aa5d-e4b0a8199c1b": {
+      "reason": "left",
+      "at": "2026-09-12T09:30:53.826Z"
+    },
+    "terence cable": {
+      "reason": "left",
+      "at": "2026-09-12T09:32:39.634Z"
     }
   }
 }
